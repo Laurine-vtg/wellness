@@ -1341,7 +1341,7 @@ elif page == "Compte rendu individuel (joueur)":
               df_filtered = df_user.loc[mask]
 
 # ----------------------------------------------------- Graphique intensité -----------------------------------------------------------
-     if prefs["show_global_intensity"] 
+     if prefs["show_global_intensity"] :
       if not df_filtered.empty:
        df_filtered_sorted = df_filtered.sort_values(by="Date")
 
