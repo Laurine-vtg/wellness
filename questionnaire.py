@@ -651,8 +651,6 @@ elif page == "Compte rendu individuel (joueur)":
      except:
         try:
             locale.setlocale(locale.LC_TIME, 'French')  
-        except:
-            st.warning("Impossible d'afficher les jours en français (paramètre régional manquant)")
 
     # -------------------------------------------------- Graphique intensité -----------------------------------------------------
      if prefs["show_weekly_intensity"] and not df_semaine.empty:
