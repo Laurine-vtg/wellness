@@ -1342,31 +1342,32 @@ elif page == "Compte rendu individuel (joueur)":
 
 # ----------------------------------------------------- Graphique intensité -----------------------------------------------------------
      if prefs["show_global_intensity"] :
-      if not df_filtered.empty:
-       df_filtered_sorted = df_filtered.sort_values(by="Date")
+      if 'df_filtered' in locals() or 'df_filtered' in globals():   
+       if not df_filtered.empty:
+        df_filtered_sorted = df_filtered.sort_values(by="Date")
 
-       fig = px.line(
-        df_filtered_sorted,
-        x="Date",
-        y="Intensite",  
-        title=f"Intensité des séances entre {start_date.strftime('%d/%m/%Y')} et {end_date.strftime('%d/%m/%Y')}",
-        labels={"Date": "Date", "Intensite": "Intensité"},
-        color_discrete_sequence=['rgba(100,100,100,0.9)']
-       )
+        fig = px.line(
+         df_filtered_sorted,
+         x="Date",
+         y="Intensite",  
+         title=f"Intensité des séances entre {start_date.strftime('%d/%m/%Y')} et {end_date.strftime('%d/%m/%Y')}",
+         labels={"Date": "Date", "Intensite": "Intensité"},
+         color_discrete_sequence=['rgba(100,100,100,0.9)']
+        )
 
-       fig.update_traces(connectgaps=True)
+        fig.update_traces(connectgaps=True)
 
     # Générer des bandes verticales à partir de la vraie première date
-       shapes = []
-       dates = df_filtered_sorted["Date"].dt.floor("D").unique()
-       min_date = min(dates)
-       max_date = max(dates)
+        shapes = []
+        dates = df_filtered_sorted["Date"].dt.floor("D").unique()
+        min_date = min(dates)
+        max_date = max(dates)
 
-       current = min_date
-       toggle = True
-       while current < max_date:
-        next_cut = current + timedelta(days=7)
-        shapes.append(dict(
+        current = min_date
+        toggle = True
+        while current < max_date:
+         next_cut = current + timedelta(days=7)
+         shapes.append(dict(
             type="rect",
             xref="x", yref="paper",
             x0=current, x1=min(next_cut, max_date),  
@@ -1374,50 +1375,52 @@ elif page == "Compte rendu individuel (joueur)":
             fillcolor='rgba(180, 180, 180, 0.2)' if toggle else 'rgba(120, 120, 120, 0.2)',
             line_width=0,
             layer="below"
-        ))
-        current = next_cut
-        toggle = not toggle
+         ))
+         current = next_cut
+         toggle = not toggle
 
       # Calcul de la moyenne d'intensité
-       moyenne_intensite = df_filtered_sorted["Intensite"].mean()
+        moyenne_intensite = df_filtered_sorted["Intensite"].mean()
 
 # Ajouter la ligne de moyenne dans la liste des shapes
-       shapes.append(dict(
-        type="line",
-        xref="paper", yref="y",
-        x0=0, x1=1,
-        y0=moyenne_intensite, y1=moyenne_intensite,
-        line=dict(
-         color='rgba(100, 100, 100, 0.9)',
-         dash='dash',
-         width=2
-        )
-       ))
+        shapes.append(dict(
+         type="line",
+         xref="paper", yref="y",
+         x0=0, x1=1,
+         y0=moyenne_intensite, y1=moyenne_intensite,
+         line=dict(
+          color='rgba(100, 100, 100, 0.9)',
+          dash='dash',
+          width=2
+         )
+        ))
 
 # Ajouter l'annotation de la ligne
-       annotations = [dict(
-        xref="paper", yref="y",
-        x=0.01, y=moyenne_intensite,
-        text=f"Moyenne : {moyenne_intensite:.2f}",
-        showarrow=False,
-        font=dict(color='rgba(100, 100, 100, 0.9)'),
-        bgcolor='rgba(255,255,255,0.7)'
-       )]
+        annotations = [dict(
+         xref="paper", yref="y",
+         x=0.01, y=moyenne_intensite,
+         text=f"Moyenne : {moyenne_intensite:.2f}",
+         showarrow=False,
+         font=dict(color='rgba(100, 100, 100, 0.9)'),
+         bgcolor='rgba(255,255,255,0.7)'
+        )]
 
 
 
-       fig.update_layout(
-        title_x=0.25,
-        yaxis=dict(range=[1, 10]),
-        xaxis=dict(tickformat='%d/%m'),
-        shapes=shapes,
-        annotations=annotations
-       )
+        fig.update_layout(
+         title_x=0.25,
+         yaxis=dict(range=[1, 10]),
+         xaxis=dict(tickformat='%d/%m'),
+         shapes=shapes,
+         annotations=annotations
+        )
 
 
-       st.plotly_chart(fig)
-      else:
+        st.plotly_chart(fig)
+       else:
          st.warning("Les données filtrées ne sont pas disponibles.")
+      else:
+        st.warning("Les données filtrées ne sont pas disponibles.")
 #--------------------------------------------------- Graphique autres paramètres ------------------------------------------------------
      if prefs["show_global_parameter"] and not df_filtered.empty:
     # Réorganisation des données pour un graphique long format
