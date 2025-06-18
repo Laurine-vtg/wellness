@@ -728,7 +728,7 @@ elif page == "Compte rendu individuel (joueur)":
         jours_ordonnes = [(debut_semaine + timedelta(days=i)).strftime("%A %d/%m").capitalize() for i in range(7)]
 
         df_merge = pd.merge(df_jours, df_semaine[["Date", "Intensite"]], on="Date", how="left")
-        df_merge["Jour"] = df_merge["Date"].dt.strftime("%A %d/%m").str.capitalize()
+        df_merge["Jour"] = df_merge["Date"].dt.strftime("%d/%m")
         df_merge["Jour"] = pd.Categorical(df_merge["Jour"], categories=jours_ordonnes, ordered=True)
 
         def couleur_intensite(val):
@@ -1423,7 +1423,8 @@ elif page == "Compte rendu individuel (joueur)":
 
 
       st.plotly_chart(fig)
-
+     else:
+         st.warning("Les données filtrées ne sont pas disponibles.")
 #--------------------------------------------------- Graphique autres paramètres ------------------------------------------------------
      if prefs["show_global_parameter"] and not df_filtered.empty:
     # Réorganisation des données pour un graphique long format
