@@ -1422,57 +1422,59 @@ elif page == "Compte rendu individuel (joueur)":
       #else:
        # st.warning("Les données filtrées ne sont pas disponibles.")
 #--------------------------------------------------- Graphique autres paramètres ------------------------------------------------------
-     if prefs["show_global_parameter"] and not df_filtered.empty:
+     if prefs["show_global_parameter"]:
+      if 'df_filtered' in locals() or 'df_filtered' in globals():   
+       if not df_filtered.empty:
     # Réorganisation des données pour un graphique long format
-      df_long = df_filtered.melt(
-        id_vars=["Date"], 
-        value_vars=["Stress", "Fatigue", "Sommeil", "Dynamisme"], 
-        var_name="Mesures", 
-        value_name="Valeurs"
-      )
-      df_long = df_long.sort_values(by="Date")
+        df_long = df_filtered.melt(
+         id_vars=["Date"], 
+         value_vars=["Stress", "Fatigue", "Sommeil", "Dynamisme"], 
+         var_name="Mesures", 
+         value_name="Valeurs"
+        )
+        df_long = df_long.sort_values(by="Date")
 
     # Création du graphique
-      fig = px.line(
-        df_long,
-        x="Date",
-        y="Valeurs", 
-        color="Mesures",
-        title=f"Stress, Fatigue, Sommeil et Dynamisme du {start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}",
-        labels={"Date": "Date", "Valeurs": "Valeurs"},
-        color_discrete_sequence=[
+        fig = px.line(
+         df_long,
+         x="Date",
+         y="Valeurs", 
+         color="Mesures",
+         title=f"Stress, Fatigue, Sommeil et Dynamisme du {start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}",
+         labels={"Date": "Date", "Valeurs": "Valeurs"},
+         color_discrete_sequence=[
             'rgba(255,0,0,0.6)',       # Stress
             'rgba(255,165,0,0.6)',     # Fatigue
             'rgba(0,128,0,0.6)',       # Sommeil
             'rgba(0,0,255,0.6)'        # Dynamisme
-        ]
-      )
+         ]
+        )
 
-      fig.update_layout(
-        title_x=0.17,
-        yaxis=dict(range=[1, 10]),
-        xaxis=dict(tickformat='%d/%m'),
-      )
+        fig.update_layout(
+         title_x=0.17,
+         yaxis=dict(range=[1, 10]),
+         xaxis=dict(tickformat='%d/%m'),
+        )
 
-      st.plotly_chart(fig)
-      st.text("Tu peux cliquer sur les légendes pour masquer certaines variables.")
+        st.plotly_chart(fig)
+        st.text("Tu peux cliquer sur les légendes pour masquer certaines variables.")
 
     # Calcul des moyennes sur la plage sélectionnée
-      moyennes = df_filtered[["Stress", "Fatigue", "Sommeil", "Dynamisme"]].mean().round(2)
+        moyennes = df_filtered[["Stress", "Fatigue", "Sommeil", "Dynamisme"]].mean().round(2)
 
     # Mise en forme pour affichage
-      df_moyennes = moyennes.reset_index()
-      df_moyennes.columns = ["Variable", "Moyenne"]
+        df_moyennes = moyennes.reset_index()
+        df_moyennes.columns = ["Variable", "Moyenne"]
 
-      st.markdown("<h5>Moyennes sur la période sélectionnée</h5>", unsafe_allow_html=True)
+        st.markdown("<h5>Moyennes sur la période sélectionnée</h5>", unsafe_allow_html=True)
 
 # Supposons que df_moyennes est calculé sur la période sélectionnée et a les colonnes Variable et Moyenne
-      df_moyennes.set_index("Variable", inplace=True)
+        df_moyennes.set_index("Variable", inplace=True)
 
 # Appliquer le style avec la fonction que tu as définie
-      styled_df = df_moyennes.style.apply(lambda x: style_moyennes(df_moyennes), axis=None)
+        styled_df = df_moyennes.style.apply(lambda x: style_moyennes(df_moyennes), axis=None)
 
-      st.dataframe(styled_df, use_container_width=True)
+        st.dataframe(styled_df, use_container_width=True)
 
 #-------------------------------------------------------- Graphique z-score -----------------------------------------------------------
      if prefs["show_global_zscore"] and not df_filtered.empty:
