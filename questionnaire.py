@@ -66,8 +66,9 @@ def load_responses(nom=None, club=None, date=None):
 
         return df
     except Exception as e:
-        st.warning("Erreur lors du chargement des données.")
-        return pd.DataFrame()
+      st.warning(f"Erreur lors du chargement des données : {e}")
+      return pd.DataFrame()
+
 
 # Fonction pour charger les utilisateurs depuis CSV
 
