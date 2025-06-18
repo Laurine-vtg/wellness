@@ -43,16 +43,20 @@ def save_response(data):
 
 # Fonction pour récupérer réponses au questionnaire avec filtres optionnels
 def load_responses(nom=None, club=None, date=None):
-    query = supabase.table("questionnaire")
+    query = supabase.table("questionnaire").select("*")
+
     if nom:
         query = query.eq("Nom", nom)
     if club:
         query = query.eq("Club", club)
     if date:
         query = query.eq("Date", date)
-    response = query.select("*").execute()
-    if response.error:
+
+    response = query.execute()
+
+    if response.status_code != 200 or response.error:
         return pd.DataFrame()
+
     return pd.DataFrame(response.data)
 
 # Fonction pour supprimer une ligne dans la table questionnaire
