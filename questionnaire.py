@@ -618,43 +618,43 @@ elif page == "Compte rendu individuel (joueur)":
     st.subheader("📆Suivi hebdomadaire")
 
     df_user = load_responses(nom=username)
-        if df_user.empty:
+     if df_user.empty:
             st.info("Aucune donnée enregistrée.")
      
     # Afficher graphique intensité, autres paramètres, score bien-être et comparaison avec semaine précédente.
-    else:
-     df_user["Date"] = pd.to_datetime(df_user["Date"], format="%d/%m/%Y")   
-     prefs = get_preferences(username)
+     else:
+      df_user["Date"] = pd.to_datetime(df_user["Date"], format="%d/%m/%Y")   
+      prefs = get_preferences(username)
 
-     df_user["Semaine_lundi"] = df_user["Date"].apply(lambda d: d - timedelta(days=d.weekday()))
-     semaines_unique = sorted(df_user["Semaine_lundi"].unique(), reverse=True)
+      df_user["Semaine_lundi"] = df_user["Date"].apply(lambda d: d - timedelta(days=d.weekday()))
+      semaines_unique = sorted(df_user["Semaine_lundi"].unique(), reverse=True)
 
-     semaines_str = [
+      semaines_str = [
         f"Semaine du {s.strftime('%d/%m/%Y')} au {(s + timedelta(days=6)).strftime('%d/%m/%Y')}"
         for s in semaines_unique
-     ]
+      ]
 
-     semaine_selectionnee_str = st.selectbox(
+      semaine_selectionnee_str = st.selectbox(
         "Pour consulter une autre semaine, sélectionne-la dans la liste déroulante :", semaines_str
-     )
+      )
 
-     index_semaine = semaines_str.index(semaine_selectionnee_str)
-     semaine_selectionnee = semaines_unique[index_semaine]
+      index_semaine = semaines_str.index(semaine_selectionnee_str)
+      semaine_selectionnee = semaines_unique[index_semaine]
 
-     debut_semaine = semaine_selectionnee
-     fin_semaine = semaine_selectionnee + timedelta(days=6)
-     df_semaine = df_user[(df_user["Date"] >= debut_semaine) & (df_user["Date"] <= fin_semaine)]
+      debut_semaine = semaine_selectionnee
+      fin_semaine = semaine_selectionnee + timedelta(days=6)
+      df_semaine = df_user[(df_user["Date"] >= debut_semaine) & (df_user["Date"] <= fin_semaine)]
 
-     try:
+      try:
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')  
-     except:
+      except:
         try:
             locale.setlocale(locale.LC_TIME, 'French')  
         except:
             st.warning("Impossible d'afficher les jours en français (paramètre régional manquant)")
 
     # -------------------------------------------------- Graphique intensité -----------------------------------------------------
-     if prefs["show_weekly_intensity"] and not df_semaine.empty:
+      if prefs["show_weekly_intensity"] and not df_semaine.empty:
         jours_semaine = [debut_semaine + timedelta(days=i) for i in range(7)]
         df_jours = pd.DataFrame({"Date": jours_semaine})
         jours_ordonnes = [(debut_semaine + timedelta(days=i)).strftime("%A %d/%m").capitalize() for i in range(7)]
@@ -712,10 +712,10 @@ elif page == "Compte rendu individuel (joueur)":
         st.plotly_chart(fig, use_container_width=True)
 
     # ----------------------------------- Graphique radar (sommeil, stress, fatigue, dynamisme) ----------------------------------
-     colonnes_parametres = ["Sommeil", "Stress", "Fatigue", "Dynamisme"]
-     moyennes = df_semaine[colonnes_parametres].mean()
+      colonnes_parametres = ["Sommeil", "Stress", "Fatigue", "Dynamisme"]
+      moyennes = df_semaine[colonnes_parametres].mean()
      
-     if prefs["show_weekly_parameter"] and not df_semaine.empty:
+      if prefs["show_weekly_parameter"] and not df_semaine.empty:
         def couleur_param(param, val):
             if pd.isna(val):
                 return 'lightgrey'
@@ -788,28 +788,28 @@ elif page == "Compte rendu individuel (joueur)":
     # ------------------------------------------------ Graphique score bien-être ------------------------------------------------
     
     # Calcul moyennes semaine.
-     colonnes_parametres = ["Sommeil", "Stress", "Fatigue", "Dynamisme"]
-     moyennes = df_semaine[colonnes_parametres].mean()
+      colonnes_parametres = ["Sommeil", "Stress", "Fatigue", "Dynamisme"]
+      moyennes = df_semaine[colonnes_parametres].mean()
     
     # Calcul score bien-être.
-     score_bien_etre = (
+      score_bien_etre = (
         moyennes["Sommeil"] +
         moyennes["Dynamisme"] +
         (10 - moyennes["Stress"]) +
         (10 - moyennes["Fatigue"])
-     ) / 4
+      ) / 4
 
     # Calcul  moyennes semaine précédente.
-     semaine_precedente = debut_semaine - timedelta(days=7)
-     fin_semaine_precedente = semaine_precedente + timedelta(days=6)
+      semaine_precedente = debut_semaine - timedelta(days=7)
+      fin_semaine_precedente = semaine_precedente + timedelta(days=6)
 
-     df_semaine_prec = df_user[
+      df_semaine_prec = df_user[
         (df_user["Date"] >= semaine_precedente) &
         (df_user["Date"] <= fin_semaine_precedente)
-     ]
+      ]
 
     # Score bien-être semaine précédente
-     if not df_semaine_prec.empty:
+      if not df_semaine_prec.empty:
         moyennes_prec = df_semaine_prec[colonnes_parametres].mean()
         score_bien_etre_prec = (
             moyennes_prec["Sommeil"] +
@@ -817,28 +817,28 @@ elif page == "Compte rendu individuel (joueur)":
             (10 - moyennes_prec["Stress"]) +
             (10 - moyennes_prec["Fatigue"])
         ) / 4
-     else:
+      else:
         score_bien_etre_prec = None
 
      # Afficher graphique score bien-être semaine et semaine précédente.
-     if prefs["show_weekly_score_bien"] and score_bien_etre is not None:
+      if prefs["show_weekly_score_bien"] and score_bien_etre is not None:
     # Valeurs à afficher
-      valeurs = [score_bien_etre]
-      labels = ['Semaine en cours']
+       valeurs = [score_bien_etre]
+       labels = ['Semaine en cours']
 
-      if score_bien_etre_prec is not None:
+       if score_bien_etre_prec is not None:
         valeurs.append(score_bien_etre_prec)
         labels.append('Semaine précédente')
 
     # Couleurs : foncé pour actuelle, clair pour précédente
-      couleurs = ['rgba(0, 0, 0, 0.9)']
-      if score_bien_etre_prec is not None:
+       couleurs = ['rgba(0, 0, 0, 0.9)']
+       if score_bien_etre_prec is not None:
         couleurs.append('rgba(0, 0, 0, 0.4)')
 
     # Jauge Plotly horizontale
-      fig_jauge = go.Figure()
+       fig_jauge = go.Figure()
 
-      fig_jauge.add_trace(go.Bar(
+       fig_jauge.add_trace(go.Bar(
         x=[4, 3, 3],
         y=['Score Bien-être']*3,
         orientation='h',
@@ -849,9 +849,9 @@ elif page == "Compte rendu individuel (joueur)":
         ]),
         showlegend=False,
         hoverinfo='none'
-      ))
+       ))
 
-      fig_jauge.add_trace(go.Scatter(
+       fig_jauge.add_trace(go.Scatter(
         x=valeurs,
         y=['Score Bien-être'] * len(valeurs),
         mode='markers',
@@ -859,21 +859,21 @@ elif page == "Compte rendu individuel (joueur)":
         text=[f"{label}: {valeur:.2f}" for label, valeur in zip(labels, valeurs)],
         hoverinfo='text',
         showlegend=False
-      ))
+       ))
 
-      fig_jauge.update_layout(
+       fig_jauge.update_layout(
         xaxis=dict(range=[1, 10], title='Score (1 à 10)'),
         yaxis=dict(showticklabels=False),
         height=150,
         margin=dict(l=40, r=40, t=40, b=40),
         title="Score Bien-être (semaine en cours vs semaine précédente)",
         title_x=0.2,
-      )
+       )
 
-      st.plotly_chart(fig_jauge, use_container_width=True)
+       st.plotly_chart(fig_jauge, use_container_width=True)
 
      # -------------------------------------------- Comparaison avec la semaine précédente ------------------------------------------
-     if prefs["show_weekly_comp"]:
+      if prefs["show_weekly_comp"]:
         st.markdown("<h5>Par rapport à la semaine précédente :</h5>", unsafe_allow_html=True)
         
         if df_semaine_prec.empty:
