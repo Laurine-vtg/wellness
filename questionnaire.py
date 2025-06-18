@@ -1477,52 +1477,54 @@ elif page == "Compte rendu individuel (joueur)":
         st.dataframe(styled_df, use_container_width=True)
 
 #-------------------------------------------------------- Graphique z-score -----------------------------------------------------------
-     if prefs["show_global_zscore"] and not df_filtered.empty:
+     if prefs["show_global_zscore"]:
+      if 'df_filtered' in locals() or 'df_filtered' in globals():   
+       if not df_filtered.empty:
     # Calcul du Z-score sur les données filtrées par le slider
-      colonnes = ["Stress", "Fatigue", "Sommeil", "Dynamisme"]
-      df_zscore = df_filtered.copy()
+        colonnes = ["Stress", "Fatigue", "Sommeil", "Dynamisme"]
+        df_zscore = df_filtered.copy()
 
     # Calcul manuel du Z-score pour chaque paramètre
-      for col in colonnes:
-        moyenne = df_filtered[col].mean()
-        ecart_type = df_filtered[col].std()
-        df_zscore[col] = (df_filtered[col] - moyenne) / ecart_type
+        for col in colonnes:
+         moyenne = df_filtered[col].mean()
+         ecart_type = df_filtered[col].std()
+         df_zscore[col] = (df_filtered[col] - moyenne) / ecart_type
 
     # Transformation en format long pour tracé Plotly
-      df_long = df_zscore.melt(
-        id_vars=["Date"], 
-        value_vars=colonnes, 
-        var_name="Mesures", 
-        value_name="Z-score"
-      )
+        df_long = df_zscore.melt(
+         id_vars=["Date"], 
+         value_vars=colonnes, 
+         var_name="Mesures", 
+         value_name="Z-score"
+        )
 
-      df_long = df_long.sort_values(by="Date")
+        df_long = df_long.sort_values(by="Date")
 
     # Graphique en ligne
-      fig = px.line(
-        df_long,
-        x="Date",
-        y="Z-score", 
-        color="Mesures",
-        title=f"Z-Score des paramètres du {start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}",
-        labels={"Date": "Date", "Z-score": "Z-score"},
-        color_discrete_sequence=[
+        fig = px.line(
+         df_long,
+         x="Date",
+         y="Z-score", 
+         color="Mesures",
+         title=f"Z-Score des paramètres du {start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}",
+         labels={"Date": "Date", "Z-score": "Z-score"},
+         color_discrete_sequence=[
             'rgba(255,0,0,0.6)',     # Stress
             'rgba(255,165,0,0.6)',   # Fatigue
             'rgba(0,128,0,0.6)',     # Sommeil
             'rgba(0,0,255,0.6)'      # Dynamisme
-        ]
-      )
+         ]
+        )
 
     # Supprimer les points et ajuster les axes
-      for trace in fig.data:
-        trace.mode = "lines"
+        for trace in fig.data:
+         trace.mode = "lines"
 
-      fig.update_layout(
-        title_x=0.23,
-        yaxis=dict(title="Z-Score", range=[-3, 3], zeroline=True),
-        xaxis=dict(tickformat='%d/%m'),
-        shapes=[
+        fig.update_layout(
+         title_x=0.23,
+         yaxis=dict(title="Z-Score", range=[-3, 3], zeroline=True),
+         xaxis=dict(tickformat='%d/%m'),
+         shapes=[
             dict(
                 type="rect",
                 xref="paper",
@@ -1535,78 +1537,80 @@ elif page == "Compte rendu individuel (joueur)":
                 layer="below",
                 line_width=0,
             )
-        ]
-      )
+         ]
+        )
 
-      st.plotly_chart(fig, use_container_width=True)
-      st.text("Tu peux cliquer sur les légendes pour masquer certaines variables.")
+        st.plotly_chart(fig, use_container_width=True)
+        st.text("Tu peux cliquer sur les légendes pour masquer certaines variables.")
 
 #--------------------------------------------------- Graphique score bien etre --------------------------------------------------------
-     if prefs["show_global_score_bien"] and not df_filtered.empty:
+     if prefs["show_global_score_bien"]:
+      if 'df_filtered' in locals() or 'df_filtered' in globals():   
+       if not df_filtered.empty:
     # Calcul du score bien-être ligne par ligne
-      df_filtered = df_filtered.copy()
-      df_filtered["Score bien-être"] = (
-        df_filtered["Sommeil"] +
-        df_filtered["Dynamisme"] +
-        (10 - df_filtered["Stress"]) +
-        (10 - df_filtered["Fatigue"])
-      ) / 4
+        df_filtered = df_filtered.copy()
+        df_filtered["Score bien-être"] = (
+         df_filtered["Sommeil"] +
+         df_filtered["Dynamisme"] +
+         (10 - df_filtered["Stress"]) +
+         (10 - df_filtered["Fatigue"])
+        ) / 4
 
     # Tri par date
-      df_filtered = df_filtered.sort_values(by="Date")
+        df_filtered = df_filtered.sort_values(by="Date")
 
     # Calcul de la moyenne du score bien-être
-      moyenne_score = df_filtered["Score bien-être"].mean()
+        moyenne_score = df_filtered["Score bien-être"].mean()
 
     # Préparation des zones colorées + ligne moyenne
-      shapes = [
+        shapes = [
         # rouge entre 1 et 4
-        dict(type="rect", xref="paper", yref="y", x0=0, x1=1, y0=1, y1=4,
+         dict(type="rect", xref="paper", yref="y", x0=0, x1=1, y0=1, y1=4,
              fillcolor='rgba(215, 72, 47, 0.5)', opacity=0.2, layer="below", line_width=0),
         # jaune entre 4 et 7
-        dict(type="rect", xref="paper", yref="y", x0=0, x1=1, y0=4, y1=7,
+         dict(type="rect", xref="paper", yref="y", x0=0, x1=1, y0=4, y1=7,
              fillcolor='rgba(249, 206, 105, 0.5)', opacity=0.2, layer="below", line_width=0),
         # vert entre 7 et 10
-        dict(type="rect", xref="paper", yref="y", x0=0, x1=1, y0=7, y1=10,
+         dict(type="rect", xref="paper", yref="y", x0=0, x1=1, y0=7, y1=10,
              fillcolor='rgba(15, 154, 75, 0.5)', opacity=0.2, layer="below", line_width=0),
         # Ligne moyenne en pointillés
-        dict(type="line", xref="paper", yref="y", x0=0, x1=1,
+         dict(type="line", xref="paper", yref="y", x0=0, x1=1,
              y0=moyenne_score, y1=moyenne_score,
              line=dict(color='rgba(100, 100, 100, 0.9)', dash='dash', width=2))
-      ]
+        ]
 
     # Annotation pour la moyenne
-      annotations = [dict(
-        xref="paper", yref="y",
-        x=0.01, y=moyenne_score,
-        text=f"Moyenne : {moyenne_score:.2f}",
-        showarrow=False,
-        font=dict(color='rgba(100, 100, 100, 0.9)'),
-        bgcolor='rgba(255,255,255,0.7)'
-      )]
+        annotations = [dict(
+         xref="paper", yref="y",
+         x=0.01, y=moyenne_score,
+         text=f"Moyenne : {moyenne_score:.2f}",
+         showarrow=False,
+         font=dict(color='rgba(100, 100, 100, 0.9)'),
+         bgcolor='rgba(255,255,255,0.7)'
+        )]
 
     # Création du graphique avec le même style que les autres
-      fig = px.line(
-        df_filtered,
-        x="Date",
-        y="Score bien-être",
-        title=f"Score bien-être du {start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}",
-        labels={"Date": "Date", "Score bien-être": "Score bien-être"},
-        markers=False,
-        color_discrete_sequence=['rgba(100,100,100,0.9)']
-      )
+        fig = px.line(
+         df_filtered,
+         x="Date",
+         y="Score bien-être",
+         title=f"Score bien-être du {start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}",
+         labels={"Date": "Date", "Score bien-être": "Score bien-être"},
+         markers=False,
+         color_discrete_sequence=['rgba(100,100,100,0.9)']
+        )
 
-      fig.update_layout(
-        title_x=0.3,
-        yaxis=dict(range=[1, 10]),
-        xaxis=dict(
+        fig.update_layout(
+         title_x=0.3,
+         yaxis=dict(range=[1, 10]),
+         xaxis=dict(
             tickformat='%d/%m',
             range=[df_filtered["Date"].min(), df_filtered["Date"].max()]),
-        shapes=shapes,
-        annotations=annotations
-      )
+         shapes=shapes,
+         annotations=annotations
+        )
 
-      st.plotly_chart(fig)
+        st.plotly_chart(fig)
 
 # ================================================== Compte rendu individuel coach ===================================================
 elif page == "Compte rendu individuel (coach)":
