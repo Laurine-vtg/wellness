@@ -725,9 +725,11 @@ elif page == "Compte rendu individuel (joueur)":
      if prefs["show_weekly_intensity"] and not df_semaine.empty:
         jours_semaine = [debut_semaine + timedelta(days=i) for i in range(7)]
         df_jours = pd.DataFrame({"Date": jours_semaine})
-        jours_ordonnes = [(debut_semaine + timedelta(days=i)).strftime("%A %d/%m").capitalize() for i in range(7)]
+        #jours_ordonnes = [(debut_semaine + timedelta(days=i)).strftime("%A %d/%m").capitalize() for i in range(7)]
+        jours_ordonnes = [(debut_semaine + timedelta(days=i)).strftime("%d/%m") for i in range(7)]
 
         df_merge = pd.merge(df_jours, df_semaine[["Date", "Intensite"]], on="Date", how="left")
+        #df_merge["Jour"] = df_merge["Date"].dt.strftime("%A %d/%m").str.capitalize()
         df_merge["Jour"] = df_merge["Date"].dt.strftime("%d/%m")
         df_merge["Jour"] = pd.Categorical(df_merge["Jour"], categories=jours_ordonnes, ordered=True)
 
