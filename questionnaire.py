@@ -121,76 +121,98 @@ def get_preferences(nom):
         records = sheet_preferences.get_all_records()
         for row in records:
             if row["Nom"] == nom:
+                # Convertir les "TRUE"/"FALSE" en booléens True/False
+                for k, v in row.items():
+                    if isinstance(v, str):
+                        if v.upper() == "TRUE":
+                            row[k] = True
+                        elif v.upper() == "FALSE":
+                            row[k] = False
                 return row
-        # Valeurs par défaut
+        # Valeurs par défaut si nom non trouvé
         return {
             "mode_questionnaire": "Tous les jours",
-            "show_seance": 1,
-            "show_weekly_intensity": 1,
-            "show_weekly_parameter": 1,
-            "show_weekly_score_bien": 1,
-            "show_weekly_comp": 1,
-            "show_monthly_intensity": 1,
-            "show_monthly_parameter": 1,
-            "show_monthly_score_bien": 1,
-            "show_monthly_comp": 1,
-            "show_monthly_zscore":1,
-            "show_global_intensity":1,
-            "show_global_parameter":1,
-            "show_global_score_bien":1,
-            "show_global_zscore":1,
-            "show_seance_coach": 1,
-            "show_weekly_intensity_coach": 1,
-            "show_weekly_parameter_coach": 1,
-            "show_weekly_score_bien_coach": 1,
-            "show_weekly_comp_coach": 1,
-            "show_monthly_intensity_coach": 1,
-            "show_monthly_parameter_coach": 1,
-            "show_monthly_score_bien_coach": 1,
-            "show_monthly_comp_coach": 1,
-            "show_monthly_zscore_coach":1,
-            "show_global_intensity_coach":1,
-            "show_global_parameter_coach":1,
-            "show_global_score_bien_coach":1,
-            "show_global_zscore_coach":1,
-            "show_team_intensity_coach":1,
-            "show_cadran": 1,
-            "show_team_bien_etre_coach":1,
-            "show_team_douleurs_coach":1,
-            "show_team_synthèse_intensity_coach": 1,
-            "show_cadran_synthèse":1,
-            "show_team_synthèse_bien_etre_coach":1,
-            "show_seance_team_coach":1
+            "show_seance": True,
+            "show_weekly_intensity": True,
+            "show_weekly_parameter": True,
+            "show_weekly_score_bien": True,
+            "show_weekly_comp": True,
+            "show_monthly_intensity": True,
+            "show_monthly_parameter": True,
+            "show_monthly_score_bien": True,
+            "show_monthly_comp": True,
+            "show_monthly_zscore": True,
+            "show_global_intensity": True,
+            "show_global_parameter": True,
+            "show_global_score_bien": True,
+            "show_global_zscore": True,
+            "show_seance_coach": True,
+            "show_weekly_intensity_coach": True,
+            "show_weekly_parameter_coach": True,
+            "show_weekly_score_bien_coach": True,
+            "show_weekly_comp_coach": True,
+            "show_monthly_intensity_coach": True,
+            "show_monthly_parameter_coach": True,
+            "show_monthly_score_bien_coach": True,
+            "show_monthly_comp_coach": True,
+            "show_monthly_zscore_coach": True,
+            "show_global_intensity_coach": True,
+            "show_global_parameter_coach": True,
+            "show_global_score_bien_coach": True,
+            "show_global_zscore_coach": True,
+            "show_team_intensity_coach": True,
+            "show_cadran": True,
+            "show_team_bien_etre_coach": True,
+            "show_team_douleurs_coach": True,
+            "show_team_synthèse_intensity_coach": True,
+            "show_cadran_synthèse": True,
+            "show_team_synthèse_bien_etre_coach": True,
+            "show_seance_team_coach": True
         }
     except:
         return {}
 
-# Fonction pour sauvegarder les préférences utilisateur
+def number_to_column(n):
+    string = ""
+    while n > 0:
+        n, remainder = divmod(n - 1, 26)
+        string = chr(65 + remainder) + string
+    return string
+
 def save_preferences(nom, prefs):
     try:
         records = sheet_preferences.get_all_records()
         noms = [r["Nom"] for r in records]
-        data = [nom] + list(prefs.values())
         headers = sheet_preferences.row_values(1)
+
+        data = []
+        for h in headers:
+            if h == "Nom":
+                data.append(nom)
+            else:
+                val = prefs.get(h, False)
+                if isinstance(val, bool):
+                    val = "TRUE" if val else "FALSE"
+                data.append(val)
+
         if nom in noms:
             index = noms.index(nom) + 2
-            sheet_preferences.update(f"A{index}:{chr(64+len(headers))}{index}", [data])
+            last_col = number_to_column(len(headers))
+            sheet_preferences.update(f"A{index}:{last_col}{index}", [data])
         else:
             sheet_preferences.append_row(data)
         return True, ""
     except Exception as e:
         return False, str(e)
+
     
 def save_preferences_2(nom, mode_questionnaire):
     try:
-        # Ouvrir la feuille 'preferences'
         sheet = spreadsheet.worksheet("preferences")
-
-        # Récupérer toutes les données
         data = sheet.get_all_values()
-
-        # Trouver l’index des colonnes 'Nom' et 'mode_questionnaire'
         headers = data[0]
+
+        # Trouver les index des colonnes "Nom" et "mode_questionnaire"
         try:
             col_nom = headers.index("Nom")
         except ValueError:
@@ -200,7 +222,7 @@ def save_preferences_2(nom, mode_questionnaire):
         except ValueError:
             return False, "Colonne 'mode_questionnaire' introuvable"
 
-        # Chercher la ligne où 'Nom' correspond
+        # Chercher la ligne correspondant au nom
         row_to_update = None
         for i, row in enumerate(data[1:], start=2):
             if len(row) > col_nom and row[col_nom] == nom:
@@ -211,7 +233,7 @@ def save_preferences_2(nom, mode_questionnaire):
             # Mettre à jour la cellule
             sheet.update_cell(row_to_update, col_mode + 1, mode_questionnaire)
         else:
-            # Ajouter une nouvelle ligne
+            # Ajouter une nouvelle ligne avec valeurs vides sauf Nom et mode_questionnaire
             new_row = [""] * len(headers)
             new_row[col_nom] = nom
             new_row[col_mode] = mode_questionnaire
@@ -220,7 +242,6 @@ def save_preferences_2(nom, mode_questionnaire):
         return True, ""
     except Exception as e:
         return False, str(e)
-
 
 # Fonction pour déterminer les couleurs d'arrière-plan
 
