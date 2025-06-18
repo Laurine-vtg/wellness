@@ -1417,10 +1417,10 @@ elif page == "Compte rendu individuel (joueur)":
 
 
         st.plotly_chart(fig)
-       else:
-         st.warning("Les données filtrées ne sont pas disponibles.")
-      else:
-        st.warning("Les données filtrées ne sont pas disponibles.")
+       #else:
+        # st.warning("Les données filtrées ne sont pas disponibles.")
+      #else:
+       # st.warning("Les données filtrées ne sont pas disponibles.")
 #--------------------------------------------------- Graphique autres paramètres ------------------------------------------------------
      if prefs["show_global_parameter"] and not df_filtered.empty:
     # Réorganisation des données pour un graphique long format
