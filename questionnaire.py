@@ -93,7 +93,7 @@ USERS = load_users_from_csv()
 # Fonction pour récupérer préférences d'affichage graphique de chaque utilisateur (valeur par défaut si aucune préférence sélectionnée).
 def get_preferences(nom):
     response = supabase.table("preferences").select("*").eq("nom", nom).execute()
-    if response.error or len(response.data) == 0:
+    if not response.data:
         # Valeurs par défaut si aucun réglage trouvé
         default = {
             "show_seance": 1,
