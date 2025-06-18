@@ -618,13 +618,12 @@ elif page == "Compte rendu individuel (joueur)":
     st.subheader("📆Suivi hebdomadaire")
 
     df_user = load_responses(nom=username)
-    df_user["Date"] = pd.to_datetime(df_user["Date"], format="%d/%m/%Y")
-
-    if df_user.empty:
-     st.info("Aucune donnée enregistrée.")
+        if df_user.empty:
+            st.info("Aucune donnée enregistrée.")
      
     # Afficher graphique intensité, autres paramètres, score bien-être et comparaison avec semaine précédente.
     else:
+     df_user["Date"] = pd.to_datetime(df_user["Date"], format="%d/%m/%Y")   
      prefs = get_preferences(username)
 
      df_user["Semaine_lundi"] = df_user["Date"].apply(lambda d: d - timedelta(days=d.weekday()))
