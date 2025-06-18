@@ -645,7 +645,14 @@ elif page == "Compte rendu individuel (joueur)":
      debut_semaine = semaine_selectionnee
      fin_semaine = semaine_selectionnee + timedelta(days=6)
      df_semaine = df_user[(df_user["Date"] >= debut_semaine) & (df_user["Date"] <= fin_semaine)]
-
+          
+     try:
+        locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')  
+     except:
+        try:
+            locale.setlocale(locale.LC_TIME, 'French')  
+        except:
+            st.warning("Impossible d'afficher les jours en français (paramètre régional manquant)")
 
     # -------------------------------------------------- Graphique intensité -----------------------------------------------------
      if prefs["show_weekly_intensity"] and not df_semaine.empty:
