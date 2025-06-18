@@ -56,7 +56,6 @@ def load_responses(nom=None, club=None, date=None):
     try:
         records = sheet_questionnaire.get_all_records()
         df = pd.DataFrame(records)
-        st.write("Colonnes disponibles :", df.columns.tolist())
 
         if nom:
             df = df[df["Nom"] == nom]
@@ -67,7 +66,7 @@ def load_responses(nom=None, club=None, date=None):
 
         return df
     except Exception as e:
-      st.warning(f"Erreur lors du chargement des données : {e}")
+      pass
       return pd.DataFrame()
 
 
