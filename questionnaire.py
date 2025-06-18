@@ -46,11 +46,11 @@ def load_responses(nom=None, club=None, date=None):
     query = supabase.table("questionnaire").select("*")
 
     if nom:
-        query = query.eq("Nom", nom)
+        query = query.eq("nom", nom)  # minuscule
     if club:
-        query = query.eq("Club", club)
+        query = query.eq("club", club)
     if date:
-        query = query.eq("Date", date)
+        query = query.eq("date", date)
 
     response = query.execute()
 
@@ -58,6 +58,7 @@ def load_responses(nom=None, club=None, date=None):
         return pd.DataFrame()
 
     return pd.DataFrame(response.data)
+
 
 # Fonction pour supprimer une ligne dans la table questionnaire
 def supprimer_reponse(nom, date):
