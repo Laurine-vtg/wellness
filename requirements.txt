@@ -3,4 +3,5 @@ Pillow
 pandas
 plotly
 numpy
-supabase
+gspread
+google-auth
