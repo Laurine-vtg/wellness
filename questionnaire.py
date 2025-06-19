@@ -1030,7 +1030,10 @@ elif page == "Compte rendu individuel":
     df_user = load_responses(nom=username)
     prefs = get_preferences(username)
 
-    df_user["Date"] = pd.to_datetime(df_user["Date"], format="%d/%m/%Y")
+    if df_user.empty or "Date" not in df_user.columns:
+        st.info("Aucune donnée enregistrée.")
+    else:
+        df_user["Date"] = pd.to_datetime(df_user["Date"], format="%d/%m/%Y")
 
     if df_user.empty:
         st.info("Aucune donnée enregistrée.")
