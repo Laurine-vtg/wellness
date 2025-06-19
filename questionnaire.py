@@ -3216,11 +3216,14 @@ elif page == "Réglages":
             with st.form("form_prefs"):
                 st.write("Coche les éléments que tu veux afficher sur ta page compte rendu individuel et enregistres :")
 
+                # Initialisation unique du dictionnaire pour stocker les prefs modifiées
+                updated_prefs = {}
+
                 # Quotidien
                 st.markdown("#### 📍Suivi quotidien")
-                updated_prefs = {
+                updated_prefs.update({
                     "show_seance": st.checkbox("Graphique quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance"]),
-                }
+                })
 
                 # Hebdomadaire
                 st.markdown("#### 📆Suivi hebdomadaire")
@@ -3237,7 +3240,7 @@ elif page == "Réglages":
                     "show_monthly_intensity": st.checkbox("Graphique mois - Intensité", prefs["show_monthly_intensity"]),
                     "show_monthly_parameter": st.checkbox("Graphique mois - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_monthly_parameter"]),
                     "show_monthly_zscore": st.checkbox("Graphique mois - Z-Score", prefs["show_monthly_zscore"]),
-                    "show_monthly_score_bien":st.checkbox("Graphique mois - Score bien-être", prefs["show_monthly_score_bien"]),
+                    "show_monthly_score_bien": st.checkbox("Graphique mois - Score bien-être", prefs["show_monthly_score_bien"]),
                     "show_monthly_comp": st.checkbox("Comparaison mois précédent", prefs["show_monthly_comp"]),
                 })
 
@@ -3276,12 +3279,15 @@ elif page == "Réglages":
             st.subheader("⚙️ Réglages d’affichage")
             with st.form("form_prefs"):
 
+                # Initialisation unique du dictionnaire
+                updated_prefs = {}
+
                 st.subheader("Page compte rendu collectif")
                 st.write("Coche les éléments que tu veux afficher sur ta page compte rendu collectif et enregistres :")
 
                 st.markdown("#### 📍Suivi quotidien")
                 updated_prefs.update({
-                    "show_seance_team_coach":st.checkbox("Graphique collectif quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance_team_coach"]),
+                    "show_seance_team_coach": st.checkbox("Graphique collectif quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance_team_coach"]),
                     "show_team_intensity_coach": st.checkbox("Graphique collectif quotidien - Intensité", prefs["show_team_intensity_coach"]),
                     "show_cadran": st.checkbox("Graphique collectif quotidien - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_cadran"]),
                     "show_team_bien_etre_coach": st.checkbox("Graphique collectif quotidien - Score bien-être", prefs["show_team_bien_etre_coach"]),
@@ -3300,9 +3306,9 @@ elif page == "Réglages":
 
                 # Quotidien
                 st.markdown("#### 📍Suivi quotidien")
-                updated_prefs = {
+                updated_prefs.update({
                     "show_seance_coach": st.checkbox("Graphique quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance_coach"]),
-                }
+                })
 
                 # Hebdomadaire
                 st.markdown("#### 📆Suivi hebdomadaire")
@@ -3319,7 +3325,7 @@ elif page == "Réglages":
                     "show_monthly_intensity_coach": st.checkbox("Graphique mois - Intensité", prefs["show_monthly_intensity_coach"]),
                     "show_monthly_parameter_coach": st.checkbox("Graphique mois - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_monthly_parameter_coach"]),
                     "show_monthly_zscore_coach": st.checkbox("Graphique mois - Z-Score", prefs["show_monthly_zscore_coach"]),
-                    "show_monthly_score_bien_coach":st.checkbox("Graphique mois - Score bien-être", prefs["show_monthly_score_bien_coach"]),
+                    "show_monthly_score_bien_coach": st.checkbox("Graphique mois - Score bien-être", prefs["show_monthly_score_bien_coach"]),
                     "show_monthly_comp_coach": st.checkbox("Comparaison mois précédent", prefs["show_monthly_comp_coach"]),
                 })
 
@@ -3336,6 +3342,7 @@ elif page == "Réglages":
                 if submitted:
                     save_preferences(username, updated_prefs)
                     st.success("Préférences mises à jour.")
+
 
 # ========================================================= Page informations =========================================================
 elif page == "Informations":
