@@ -121,10 +121,26 @@ def get_preferences(nom):
         records = sheet_preferences.get_all_records()
         for row in records:
             if row["Nom"] == nom:
-                # Convertir tous les champs sauf "Nom" en bool
-                return {k: (v if k == "Nom" else bool(v)) for k, v in row.items()}
+                prefs = {}
+                for k, v in row.items():
+                    if k == "Nom":
+                        prefs[k] = v
+                    else:
+                        # Conversion stricte du texte TRUE/FALSE en bool
+                        if isinstance(v, str):
+                            v_upper = v.upper()
+                            if v_upper == "TRUE":
+                                prefs[k] = True
+                            elif v_upper == "FALSE":
+                                prefs[k] = False
+                            else:
+                                # Si valeur inattendue, cast en bool
+                                prefs[k] = bool(v)
+                        else:
+                            prefs[k] = bool(v)
+                return prefs
 
-        # Sinon, on crée des préférences par défaut selon le rôle
+        # Si pas trouvé dans sheet, créer préférences par défaut selon rôle
         user_info = USERS.get(nom)
         role = user_info.get("role") if user_info else "player"
 
@@ -144,7 +160,6 @@ def get_preferences(nom):
     except Exception as e:
         st.error(f"Erreur lors du chargement des préférences : {e}")
         return {}
-
 def get_mode_questionnaire(nom):
     try:
         sheet = spreadsheet.worksheet("frequence")
@@ -167,13 +182,13 @@ def col_num_to_letter(n):
 
 def save_preferences(nom, prefs):
     try:
-        headers = sheet_preferences.row_values(1)  # récupère les titres de colonnes
-        num_cols = len(headers)  # nombre total de colonnes
+        headers = sheet_preferences.row_values(1)
+        num_cols = len(headers)
 
-        # Construire la liste de données dans l'ordre des colonnes, en convertissant bool et int en TRUE/FALSE
         data = [nom]
         for col in headers[1:]:
             val = prefs.get(col, False)
+            # Stocker uniquement TRUE/FALSE en majuscule (texte)
             if isinstance(val, bool):
                 val = "TRUE" if val else "FALSE"
             elif isinstance(val, int):
@@ -182,13 +197,12 @@ def save_preferences(nom, prefs):
                 val = str(val)
             data.append(val)
 
-        # Vérifier si l'utilisateur existe déjà dans la feuille
         records = sheet_preferences.get_all_records()
         noms = [r["Nom"] for r in records]
 
         if nom in noms:
-            index = noms.index(nom) + 2  # +2 car index start à 0 et ligne 1 = header
-            end_col = col_num_to_letter(num_cols)  # par ex 35 -> AI
+            index = noms.index(nom) + 2  # +2 pour ligne dans sheet
+            end_col = col_num_to_letter(num_cols)
             sheet_preferences.update(f"A{index}:{end_col}{index}", [data])
         else:
             sheet_preferences.append_row(data)
@@ -196,7 +210,7 @@ def save_preferences(nom, prefs):
         return True, ""
     except Exception as e:
         return False, str(e)
-
+        
 def save_preferences_2(nom, mode_questionnaire):
     try:
         sheet = spreadsheet.worksheet("frequence")
@@ -3221,11 +3235,10 @@ elif page == "Réglages":
     else:
         role = USERS[username]["role"]
 
-        # Charger les préférences utilisateur
-        prefs = get_preferences(username)
-
-        # Ne PAS sauvegarder ici automatiquement pour éviter d'écraser les modifs
-        # save_preferences(username, prefs)  <-- supprimé
+        # Charger préférences dans session_state si pas déjà fait
+        if "prefs" not in st.session_state:
+            st.session_state["prefs"] = get_preferences(username)
+        prefs = st.session_state["prefs"]
 
         if role == "player":
             st.subheader("⚙️ Réglages d’affichage")
@@ -3306,13 +3319,14 @@ elif page == "Réglages":
                 if submitted:
                     success, msg = save_preferences(username, updated_prefs)
                     if success:
-                        st.success("Préférences mises à jour.")
-                        # Optionnel : mettre à jour prefs dans session_state pour rafraîchir l’affichage ailleurs
                         st.session_state["prefs"] = updated_prefs
+                        st.success("Préférences mises à jour.")
+                        st.experimental_rerun()
                     else:
                         st.error(f"Erreur lors de la sauvegarde : {msg}")
 
         elif role == "coach":
+            # Gestion fréquence questionnaire
             st.subheader("⚙️ Réglages de fréquence des réponses")
             with st.form("form_frequence"):
                 frequence_options = ["Tous les jours", "Seulement les jours de séance ou de match"]
@@ -3330,12 +3344,17 @@ elif page == "Réglages":
                     if success:
                         st.session_state["mode_questionnaire"] = frequence_questionnaire
                         st.success("Préférence enregistrée ✅")
+                        st.experimental_rerun()
                     else:
                         st.error(f"Erreur lors de la sauvegarde : {msg}")
 
+            # Réglages d’affichage coach
+            if "prefs" not in st.session_state:
+                st.session_state["prefs"] = get_preferences(username)
+            prefs = st.session_state["prefs"]
+
             st.subheader("⚙️ Réglages d’affichage")
             with st.form("form_prefs_coach"):
-
                 updated_prefs = {}
 
                 st.subheader("Page compte rendu collectif")
@@ -3452,10 +3471,12 @@ elif page == "Réglages":
                 if submitted:
                     success, msg = save_preferences(username, updated_prefs)
                     if success:
-                        st.success("Préférences mises à jour.")
                         st.session_state["prefs"] = updated_prefs
+                        st.success("Préférences mises à jour.")
+                        st.experimental_rerun()
                     else:
                         st.error(f"Erreur lors de la sauvegarde : {msg}")
+
 
 # ========================================================= Page informations =========================================================
 elif page == "Informations":
