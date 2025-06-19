@@ -15,27 +15,61 @@ import json
 import gspread
 from google.oauth2.service_account import Credentials
 
-# Pour l'accès Google Sheets & Drive
+import streamlit as st
+import os
+import json
+import gspread
+from google.oauth2.service_account import Credentials
+
+# Définition des scopes Google API
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
-try:
-    service_account_info = json.loads(os.getenv("GOOGLE_CREDENTIALS_JSON"))
-    creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
-    client = gspread.authorize(creds)
-    spreadsheet = client.open("wellness_data")
-    sheet_questionnaire = spreadsheet.worksheet("questionnaire")
-    sheet_preferences = spreadsheet.worksheet("preferences")
+def get_google_client():
+    """Initialise et retourne le client gspread autorisé"""
+    try:
+        service_account_info = json.loads(os.getenv("GOOGLE_CREDENTIALS_JSON"))
+        creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
+        client = gspread.authorize(creds)
+        return client
+    except Exception as e:
+        st.error(f"Erreur lors de l'authentification Google Sheets : {e}")
+        st.stop()
 
-except gspread.exceptions.APIError as e:
-    st.warning("⚠️ Un problème temporaire avec Google Sheets est survenu. Merci de cliquer sur le bouton **Rerun** en haut à droite pour réessayer.")
-    st.stop()  # Stoppe l’exécution du reste de l’app tant que c’est pas résolu
+def get_spreadsheet(client, name):
+    """Ouvre le Google Sheet par son nom"""
+    try:
+        return client.open(name)
+    except gspread.exceptions.APIError as e:
+        st.warning("⚠️ Problème temporaire d'accès au Google Sheet. Merci de cliquer sur **Rerun** en haut à droite pour réessayer.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Erreur inattendue lors de l'ouverture du fichier Google Sheet : {e}")
+        st.stop()
 
-except Exception as e:
-    st.error(f"Erreur inattendue : {e}")
-    st.stop()
+def get_worksheet(spreadsheet, sheet_name):
+    """Récupère une feuille du classeur Google Sheet, avec gestion d'erreur"""
+    try:
+        return spreadsheet.worksheet(sheet_name)
+    except gspread.exceptions.APIError as e:
+        st.warning(f"⚠️ Impossible d'accéder à l'onglet '{sheet_name}'. Clique sur **Rerun** en haut à droite pour réessayer.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Erreur inattendue lors de l'accès à l'onglet '{sheet_name}': {e}")
+        st.stop()
+
+# Initialisation client
+client = get_google_client()
+
+# Ouverture du classeur
+spreadsheet = get_spreadsheet(client, "wellness_data")
+
+# Chargement des feuilles
+sheet_questionnaire = get_worksheet(spreadsheet, "questionnaire")
+sheet_preferences = get_worksheet(spreadsheet, "preferences")
+
 
 # Fonction pour enregistrer réponse au questionnaire
 
