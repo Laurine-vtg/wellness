@@ -736,7 +736,14 @@ elif page == "Compte rendu individuel":
     st.subheader("📆Suivi hebdomadaire")
 
     df_user = load_responses(nom=username)
-    df_user["Date"] = pd.to_datetime(df_user["Date"], format="%d/%m/%Y")
+
+    # Vérifier que le DataFrame n'est pas vide ET que la colonne "Date" existe
+    if df_user.empty or "Date" not in df_user.columns:
+        st.info("Aucune donnée enregistrée.")
+    else:
+    # Conversion de la colonne "Date"
+        df_user["Date"] = pd.to_datetime(df_user["Date"], format="%d/%m/%Y")
+        prefs = get_preferences(username)
 
     if df_user.empty:
      st.info("Aucune donnée enregistrée.")
