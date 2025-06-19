@@ -502,7 +502,7 @@ if page == "Questionnaire de suivi":
     coach_nom = get_coach_for_club(club)
 
     if coach_nom:
-     prefs = get_preferences(coach_nom)
+     prefs = get_mode_questionnaire(coach_nom)
      mode = prefs.get("mode_questionnaire", "Tous les jours")
 
      if mode == "Seulement les jours de séance ou de match":
@@ -546,7 +546,7 @@ if page == "Questionnaire de suivi":
 
 # On charge les préférences du coach
     if coach_nom:
-     prefs = get_preferences(coach_nom)
+     prefs = get_mode_questionnaire(coach_nom)
      mode = prefs.get("mode_questionnaire", "Tous les jours")
     else:
      mode = "Tous les jours"  # valeur par défaut
