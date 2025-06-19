@@ -338,7 +338,7 @@ ACCESS_RIGHTS = {
     ],
     "player": [
         "Questionnaire de suivi",
-        "Compte rendu individuel (joueur)",
+        "Compte rendu individuel",
         "Réglages"
     ]
 }
@@ -648,7 +648,7 @@ if page == "Questionnaire de suivi":
             st.error(f"Erreur lors de l'enregistrement : {error_msg}")
 
 # ================================================== Compte rendu individuel joueur ==================================================
-elif page == "Compte rendu individuel (joueur)":
+elif page == "Compte rendu individuel":
     st.title("Compte rendu individuel")
 
     # ------------------------------------------------------- Séance/match -----------------------------------------------------
