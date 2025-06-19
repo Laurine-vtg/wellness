@@ -304,7 +304,7 @@ def style_moyennes(df):
         styles.append([style])
     return pd.DataFrame(styles, index=df.index, columns=["Moyenne"])
 
-# Fonction pour voir les joueurs du club
+# Fonction pour voir les s du club
 
 def load_club_players(club):
     df_id = pd.read_csv("ID.csv", sep=";")
@@ -338,7 +338,7 @@ ACCESS_RIGHTS = {
     ],
     "player": [
         "Questionnaire de suivi",
-        "Compte rendu individuel (joueur)",
+        "Compte rendu individuel ()",
         "Réglages"
     ]
 }
@@ -498,7 +498,7 @@ page = selected_page
 # Sélectionner le nom automatiquement, choisir la date, slider pour répondre aux questions et envoyer réponses.
 if page == "Questionnaire de suivi":
     st.title("Questionnaire de suivi")
-    club = st.session_state.get("club", "")  # le club du joueur
+    club = st.session_state.get("club", "")  # le club du 
     coach_nom = get_coach_for_club(club)
 
     if coach_nom:
@@ -540,7 +540,7 @@ if page == "Questionnaire de suivi":
     )
 
 # ------------------------------------------------------------ Questions -----------------------------------------------------------
-    # Récupération du club du joueur et du coach associé
+    # Récupération du club du  et du coach associé
     club = st.session_state.get("club", "")
     coach_nom = get_coach_for_club(club)
 
@@ -1667,12 +1667,19 @@ elif page == "Compte rendu individuel (coach)":
     st.title("Compte rendu individuel")
 
     df = load_responses()
-
     club = st.session_state.get("club", "").strip().lower()
 
-        # On filtre df pour ne garder que le club
-    df["Club"] = df["Club"].str.strip().str.lower()
-    df_club = df[df["Club"] == club]
+    # Vérification sécurité du DataFrame et colonne "Club"
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        if "Club" in df.columns:
+            df["Club"] = df["Club"].str.strip().str.lower()
+            df_club = df[df["Club"] == club]
+        else:
+            st.warning("⚠️ La colonne 'Club' est absente des données.")
+            st.stop()
+    else:
+        st.warning("⚠️ Les données sont vides ou non chargées.")
+        st.stop()
 
         # Extraire tous les joueurs du club depuis USERS (pas juste ceux avec données)
         # Extraire uniquement les joueurs (role == "player") du club
