@@ -3221,7 +3221,6 @@ elif page == "Réglages":
     else:
         role = USERS[username]["role"]
 
-        # Charger préférences dans session_state si pas déjà fait
         if "prefs" not in st.session_state:
             st.session_state["prefs"] = get_preferences(username)
         prefs = st.session_state["prefs"]
@@ -3233,72 +3232,68 @@ elif page == "Réglages":
 
                 updated_prefs = {}
 
-                # Quotidien
                 st.markdown("#### 📍Suivi quotidien")
                 updated_prefs["show_seance"] = st.checkbox(
                     "Graphique quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_seance", False)
+                    value=bool(prefs.get("show_seance", 0))
                 )
 
-                # Hebdomadaire
                 st.markdown("#### 📆Suivi hebdomadaire")
                 updated_prefs["show_weekly_intensity"] = st.checkbox(
                     "Graphique semaine - Intensité",
-                    value=prefs.get("show_weekly_intensity", False)
+                    value=bool(prefs.get("show_weekly_intensity", 0))
                 )
                 updated_prefs["show_weekly_parameter"] = st.checkbox(
                     "Graphique semaine - Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_weekly_parameter", False)
+                    value=bool(prefs.get("show_weekly_parameter", 0))
                 )
                 updated_prefs["show_weekly_score_bien"] = st.checkbox(
                     "Graphique semaine - Score bien-être",
-                    value=prefs.get("show_weekly_score_bien", False)
+                    value=bool(prefs.get("show_weekly_score_bien", 0))
                 )
                 updated_prefs["show_weekly_comp"] = st.checkbox(
                     "Comparaison semaine précédente",
-                    value=prefs.get("show_weekly_comp", False)
+                    value=bool(prefs.get("show_weekly_comp", 0))
                 )
 
-                # Mensuel
                 st.markdown("#### 📅Suivi mensuel")
                 updated_prefs["show_monthly_intensity"] = st.checkbox(
                     "Graphique mois - Intensité",
-                    value=prefs.get("show_monthly_intensity", False)
+                    value=bool(prefs.get("show_monthly_intensity", 0))
                 )
                 updated_prefs["show_monthly_parameter"] = st.checkbox(
                     "Graphique mois - Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_monthly_parameter", False)
+                    value=bool(prefs.get("show_monthly_parameter", 0))
                 )
                 updated_prefs["show_monthly_zscore"] = st.checkbox(
                     "Graphique mois - Z-Score",
-                    value=prefs.get("show_monthly_zscore", False)
+                    value=bool(prefs.get("show_monthly_zscore", 0))
                 )
                 updated_prefs["show_monthly_score_bien"] = st.checkbox(
                     "Graphique mois - Score bien-être",
-                    value=prefs.get("show_monthly_score_bien", False)
+                    value=bool(prefs.get("show_monthly_score_bien", 0))
                 )
                 updated_prefs["show_monthly_comp"] = st.checkbox(
                     "Comparaison mois précédent",
-                    value=prefs.get("show_monthly_comp", False)
+                    value=bool(prefs.get("show_monthly_comp", 0))
                 )
 
-                # Synthèse
                 st.markdown("#### 📊Synthèse")
                 updated_prefs["show_global_intensity"] = st.checkbox(
                     "Graphique général - Intensité",
-                    value=prefs.get("show_global_intensity", False)
+                    value=bool(prefs.get("show_global_intensity", 0))
                 )
                 updated_prefs["show_global_parameter"] = st.checkbox(
                     "Graphique général - Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_global_parameter", False)
+                    value=bool(prefs.get("show_global_parameter", 0))
                 )
                 updated_prefs["show_global_zscore"] = st.checkbox(
                     "Graphique général - Z-Score",
-                    value=prefs.get("show_global_zscore", False)
+                    value=bool(prefs.get("show_global_zscore", 0))
                 )
                 updated_prefs["show_global_score_bien"] = st.checkbox(
                     "Graphique général - Score bien-être",
-                    value=prefs.get("show_global_score_bien", False)
+                    value=bool(prefs.get("show_global_score_bien", 0))
                 )
 
                 submitted = st.form_submit_button("Enregistrer")
@@ -3306,12 +3301,11 @@ elif page == "Réglages":
                     success, msg = save_preferences(username, updated_prefs)
                     if success:
                         st.session_state["prefs"] = updated_prefs
-                        st.success("Préférences mises à jour.")
+                        st.success("Préférences enregistrée ✅")
                     else:
                         st.error(f"Erreur lors de la sauvegarde : {msg}")
 
         elif role == "coach":
-            # Gestion fréquence questionnaire
             st.subheader("⚙️ Réglages de fréquence des réponses")
             with st.form("form_frequence"):
                 frequence_options = ["Tous les jours", "Seulement les jours de séance ou de match"]
@@ -3332,10 +3326,8 @@ elif page == "Réglages":
                     else:
                         st.error(f"Erreur lors de la sauvegarde : {msg}")
 
-            # Réglages d’affichage coach
-            if "prefs" not in st.session_state:
-                st.session_state["prefs"] = get_preferences(username)
-            prefs = st.session_state["prefs"]
+            prefs = get_preferences(username)
+            st.session_state["prefs"] = prefs
 
             st.subheader("⚙️ Réglages d’affichage")
             with st.form("form_prefs_coach"):
@@ -3347,108 +3339,104 @@ elif page == "Réglages":
                 st.markdown("#### 📍Suivi quotidien")
                 updated_prefs["show_seance_team_coach"] = st.checkbox(
                     "Graphique collectif quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_seance_team_coach", False)
+                    value=bool(prefs.get("show_seance_team_coach", 0))
                 )
                 updated_prefs["show_team_intensity_coach"] = st.checkbox(
                     "Graphique collectif quotidien - Intensité",
-                    value=prefs.get("show_team_intensity_coach", False)
+                    value=bool(prefs.get("show_team_intensity_coach", 0))
                 )
                 updated_prefs["show_cadran"] = st.checkbox(
                     "Graphique collectif quotidien - Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_cadran", False)
+                    value=bool(prefs.get("show_cadran", 0))
                 )
                 updated_prefs["show_team_bien_etre_coach"] = st.checkbox(
                     "Graphique collectif quotidien - Score bien-être",
-                    value=prefs.get("show_team_bien_etre_coach", False)
+                    value=bool(prefs.get("show_team_bien_etre_coach", 0))
                 )
                 updated_prefs["show_team_douleurs_coach"] = st.checkbox(
                     "Graphique collectif quotidien - Douleurs",
-                    value=prefs.get("show_team_douleurs_coach", False)
+                    value=bool(prefs.get("show_team_douleurs_coach", 0))
                 )
 
                 st.markdown("#### 📊Synthèse sur une période donnée")
                 updated_prefs["show_team_synthèse_intensity_coach"] = st.checkbox(
                     "Graphique collectif général - Intensité",
-                    value=prefs.get("show_team_synthèse_intensity_coach", False)
+                    value=bool(prefs.get("show_team_synthèse_intensity_coach", 0))
                 )
                 updated_prefs["show_cadran_synthèse"] = st.checkbox(
                     "Graphique collectif général - Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_cadran_synthèse", False)
+                    value=bool(prefs.get("show_cadran_synthèse", 0))
                 )
                 updated_prefs["show_team_synthèse_bien_etre_coach"] = st.checkbox(
                     "Graphique collectif général - Score bien-être",
-                    value=prefs.get("show_team_synthèse_bien_etre_coach", False)
+                    value=bool(prefs.get("show_team_synthèse_bien_etre_coach", 0))
                 )
 
                 st.subheader("Page compte rendu individuel")
                 st.write("Coche les éléments que tu veux afficher sur ta page compte rendu individuel et enregistres :")
 
-                # Quotidien
                 st.markdown("#### 📍Suivi quotidien")
                 updated_prefs["show_seance_coach"] = st.checkbox(
                     "Graphique quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_seance_coach", False)
+                    value=bool(prefs.get("show_seance_coach", 0))
                 )
 
-                # Hebdomadaire
                 st.markdown("#### 📆Suivi hebdomadaire")
                 updated_prefs["show_weekly_intensity_coach"] = st.checkbox(
                     "Graphique semaine - Intensité",
-                    value=prefs.get("show_weekly_intensity_coach", False)
+                    value=bool(prefs.get("show_weekly_intensity_coach", 0))
                 )
                 updated_prefs["show_weekly_parameter_coach"] = st.checkbox(
                     "Graphique semaine - Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_weekly_parameter_coach", False)
+                    value=bool(prefs.get("show_weekly_parameter_coach", 0))
                 )
                 updated_prefs["show_weekly_score_bien_coach"] = st.checkbox(
                     "Graphique semaine - Score bien-être",
-                    value=prefs.get("show_weekly_score_bien_coach", False)
+                    value=bool(prefs.get("show_weekly_score_bien_coach", 0))
                 )
                 updated_prefs["show_weekly_comp_coach"] = st.checkbox(
                     "Comparaison semaine précédente",
-                    value=prefs.get("show_weekly_comp_coach", False)
+                    value=bool(prefs.get("show_weekly_comp_coach", 0))
                 )
 
-                # Mensuel
                 st.markdown("#### 📅Suivi mensuel")
                 updated_prefs["show_monthly_intensity_coach"] = st.checkbox(
                     "Graphique mois - Intensité",
-                    value=prefs.get("show_monthly_intensity_coach", False)
+                    value=bool(prefs.get("show_monthly_intensity_coach", 0))
                 )
                 updated_prefs["show_monthly_parameter_coach"] = st.checkbox(
                     "Graphique mois - Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_monthly_parameter_coach", False)
+                    value=bool(prefs.get("show_monthly_parameter_coach", 0))
                 )
                 updated_prefs["show_monthly_zscore_coach"] = st.checkbox(
                     "Graphique mois - Z-Score",
-                    value=prefs.get("show_monthly_zscore_coach", False)
+                    value=bool(prefs.get("show_monthly_zscore_coach", 0))
                 )
                 updated_prefs["show_monthly_score_bien_coach"] = st.checkbox(
                     "Graphique mois - Score bien-être",
-                    value=prefs.get("show_monthly_score_bien_coach", False)
+                    value=bool(prefs.get("show_monthly_score_bien_coach", 0))
                 )
                 updated_prefs["show_monthly_comp_coach"] = st.checkbox(
                     "Comparaison mois précédent",
-                    value=prefs.get("show_monthly_comp_coach", False)
+                    value=bool(prefs.get("show_monthly_comp_coach", 0))
                 )
 
-                # Synthèse individuelle
                 st.markdown("#### 📊Synthèse")
                 updated_prefs["show_global_intensity_coach"] = st.checkbox(
                     "Graphique général - Intensité",
-                    value=prefs.get("show_global_intensity_coach", False)
+                    value=bool(prefs.get("show_global_intensity_coach", 0))
                 )
                 updated_prefs["show_global_parameter_coach"] = st.checkbox(
                     "Graphique général - Stress/Fatigue/Sommeil/Dynamisme",
-                    value=prefs.get("show_global_parameter_coach", False)
+                    value=bool(prefs.get("show_global_parameter_coach", 0))
                 )
                 updated_prefs["show_global_zscore_coach"] = st.checkbox(
                     "Graphique général - Z-Score",
-                    value=prefs.get("show_global_zscore_coach", False)
+                    value=bool(prefs.get("show_global_zscore_coach", 0))
                 )
                 updated_prefs["show_global_score_bien_coach"] = st.checkbox(
                     "Graphique général - Score bien-être",
-                    value=prefs.get("show_global_score_bien_coach", False)
+                    value=bool(prefs.get("show_global_score_bien_coach", 0))
                 )
 
                 submitted = st.form_submit_button("Enregistrer")
@@ -3456,10 +3444,9 @@ elif page == "Réglages":
                     success, msg = save_preferences(username, updated_prefs)
                     if success:
                         st.session_state["prefs"] = updated_prefs
-                        st.success("Préférences mises à jour.")
+                        st.success("Préférences enregistrée ✅")
                     else:
                         st.error(f"Erreur lors de la sauvegarde : {msg}")
-
 
 # ========================================================= Page informations =========================================================
 elif page == "Informations":
