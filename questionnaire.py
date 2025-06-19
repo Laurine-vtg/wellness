@@ -21,14 +21,21 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-# Charger les credentials depuis la variable d'environnement secrète (Streamlit Secrets)
-service_account_info = json.loads(os.getenv("GOOGLE_CREDENTIALS_JSON"))
+try:
+    service_account_info = json.loads(os.getenv("GOOGLE_CREDENTIALS_JSON"))
+    creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
+    client = gspread.authorize(creds)
+    spreadsheet = client.open("wellness_data")
+    sheet_questionnaire = spreadsheet.worksheet("questionnaire")
+    sheet_preferences = spreadsheet.worksheet("preferences")
 
-creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
-client = gspread.authorize(creds)
-spreadsheet = client.open("wellness_data")  # nom du Google Sheet
-sheet_questionnaire = spreadsheet.worksheet("questionnaire")
-sheet_preferences = spreadsheet.worksheet("preferences")
+except gspread.exceptions.APIError as e:
+    st.warning("⚠️ Un problème temporaire avec Google Sheets est survenu. Merci de cliquer sur le bouton **Rerun** en haut à droite pour réessayer.")
+    st.stop()  # Stoppe l’exécution du reste de l’app tant que c’est pas résolu
+
+except Exception as e:
+    st.error(f"Erreur inattendue : {e}")
+    st.stop()
 
 # Fonction pour enregistrer réponse au questionnaire
 
