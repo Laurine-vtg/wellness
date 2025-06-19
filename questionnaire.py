@@ -115,38 +115,30 @@ def supprimer_reponse(nom, date):
     except Exception as e:
         return False, str(e)
 
-# Fonction pour récupérer les préférences utilisateur
+# Fonction utilitaire
+def col_num_to_letter(n):
+    """Convertit un numéro de colonne en lettre Excel (ex: 1 -> A, 27 -> AA)"""
+    string = ""
+    while n > 0:
+        n, remainder = divmod(n - 1, 26)
+        string = chr(65 + remainder) + string
+    return string
+
+
+# Lecture des préférences utilisateur
 def get_preferences(nom):
     try:
         records = sheet_preferences.get_all_records()
         for row in records:
             if row["Nom"] == nom:
-                prefs = {}
-                for k, v in row.items():
-                    if k == "Nom":
-                        prefs[k] = v
-                    else:
-                        # Conversion stricte du texte TRUE/FALSE en bool
-                        if isinstance(v, str):
-                            v_upper = v.upper()
-                            if v_upper == "TRUE":
-                                prefs[k] = True
-                            elif v_upper == "FALSE":
-                                prefs[k] = False
-                            else:
-                                # Si valeur inattendue, cast en bool
-                                prefs[k] = bool(v)
-                        else:
-                            prefs[k] = bool(v)
-                return prefs
+                return {k: (v if k == "Nom" else bool(int(v))) for k, v in row.items()}
 
-        # Si pas trouvé dans sheet, créer préférences par défaut selon rôle
+        # Si pas trouvé, générer des valeurs par défaut
         user_info = USERS.get(nom)
         role = user_info.get("role") if user_info else "player"
 
         headers = sheet_preferences.row_values(1)
         default_prefs = {}
-
         for col in headers:
             if col == "Nom":
                 continue
@@ -160,26 +152,9 @@ def get_preferences(nom):
     except Exception as e:
         st.error(f"Erreur lors du chargement des préférences : {e}")
         return {}
-def get_mode_questionnaire(nom):
-    try:
-        sheet = spreadsheet.worksheet("frequence")
-        records = sheet.get_all_records()
-        for row in records:
-            if row["Nom"] == nom:
-                return row["mode_questionnaire"]
-        return "Tous les jours"  # Valeur par défaut si vide
-    except:
-        return "Tous les jours"
 
-# Fonction pour sauvegarder les préférences utilisateur
-def col_num_to_letter(n):
-    """Convertit un numéro de colonne en lettre Excel (ex: 1 -> A, 27 -> AA)"""
-    string = ""
-    while n > 0:
-        n, remainder = divmod(n - 1, 26)
-        string = chr(65 + remainder) + string
-    return string
 
+# Sauvegarde des préférences utilisateur (1 = coché, 0 = décoché)
 def save_preferences(nom, prefs):
     try:
         headers = sheet_preferences.row_values(1)
@@ -188,20 +163,14 @@ def save_preferences(nom, prefs):
         data = [nom]
         for col in headers[1:]:
             val = prefs.get(col, False)
-            # Stocker uniquement TRUE/FALSE en majuscule (texte)
-            if isinstance(val, bool):
-                val = "TRUE" if val else "FALSE"
-            elif isinstance(val, int):
-                val = "TRUE" if val == 1 else "FALSE"
-            else:
-                val = str(val)
+            val = 1 if val else 0
             data.append(val)
 
         records = sheet_preferences.get_all_records()
         noms = [r["Nom"] for r in records]
 
         if nom in noms:
-            index = noms.index(nom) + 2  # +2 pour ligne dans sheet
+            index = noms.index(nom) + 2  # Ligne de l'utilisateur
             end_col = col_num_to_letter(num_cols)
             sheet_preferences.update(f"A{index}:{end_col}{index}", [data])
         else:
@@ -210,7 +179,23 @@ def save_preferences(nom, prefs):
         return True, ""
     except Exception as e:
         return False, str(e)
-        
+
+
+# Lecture du mode questionnaire (feuille "frequence")
+def get_mode_questionnaire(nom):
+    try:
+        sheet = spreadsheet.worksheet("frequence")
+        records = sheet.get_all_records()
+        for row in records:
+            if row["Nom"] == nom:
+                return row.get("mode_questionnaire", "Tous les jours")
+        return "Tous les jours"
+    except Exception as e:
+        st.error(f"Erreur lecture mode_questionnaire : {e}")
+        return "Tous les jours"
+
+
+# Sauvegarde du mode questionnaire (feuille "frequence")
 def save_preferences_2(nom, mode_questionnaire):
     try:
         sheet = spreadsheet.worksheet("frequence")
@@ -243,7 +228,6 @@ def save_preferences_2(nom, mode_questionnaire):
         return True, ""
     except Exception as e:
         return False, str(e)
-
 
 # Fonction pour déterminer les couleurs d'arrière-plan
 
