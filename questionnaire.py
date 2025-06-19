@@ -134,7 +134,7 @@ def get_preferences(nom):
             if col == "Nom":
                 continue
             # Champs coach uniquement
-            if col.endswith("_coach") or col in ["show_cadran", "show_cadran_synthèse", "mode_questionnaire"]:
+            if col.endswith("_coach") or col in ["show_cadran", "show_cadran_synthèse"]:
                 default_prefs[col] = 1 if role == "coach" else 0
             else:
                 default_prefs[col] = 1 if role == "player" else 0
@@ -144,6 +144,18 @@ def get_preferences(nom):
     except Exception as e:
         st.error(f"Erreur lors du chargement des préférences : {e}")
         return {}
+
+
+def get_mode_questionnaire(nom):
+    try:
+        sheet = spreadsheet.worksheet("frequence")
+        records = sheet.get_all_records()
+        for row in records:
+            if row["Nom"] == nom:
+                return row["mode_questionnaire"]
+        return "Tous les jours"  # Valeur par défaut si vide
+    except:
+        return "Tous les jours"
 
 # Fonction pour sauvegarder les préférences utilisateur
 def save_preferences(nom, prefs):
@@ -166,7 +178,7 @@ def save_preferences(nom, prefs):
 
 def save_preferences_2(nom, mode_questionnaire):
     try:
-        sheet = spreadsheet.worksheet("preferences")
+        sheet = spreadsheet.worksheet("frequence")
         data = sheet.get_all_values()
         headers = data[0]
 
@@ -196,6 +208,7 @@ def save_preferences_2(nom, mode_questionnaire):
         return True, ""
     except Exception as e:
         return False, str(e)
+
 
 # Fonction pour déterminer les couleurs d'arrière-plan
 
@@ -3241,7 +3254,7 @@ elif page == "Réglages":
             st.subheader("⚙️ Réglages de fréquence des réponses")
             with st.form("form_frequence"):
                 frequence_options = ["Tous les jours", "Seulement les jours de séance ou de match"]
-                current_freq = prefs.get("mode_questionnaire", "Tous les jours")
+                current_freq = get_mode_questionnaire(username)
                 default_index = frequence_options.index(current_freq) if current_freq in frequence_options else 0
 
                 frequence_questionnaire = st.radio(
