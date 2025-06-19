@@ -160,21 +160,26 @@ def get_mode_questionnaire(nom):
 # Fonction pour sauvegarder les préférences utilisateur
 def save_preferences(nom, prefs):
     try:
-        records = sheet_preferences.get_all_records()
-        noms = [r["Nom"] for r in records]
-        data = [nom] + list(prefs.values())
         headers = sheet_preferences.row_values(1)
 
+        # Créer la ligne dans l’ordre des colonnes
+        data = [nom]
+        for col in headers[1:]:  # on saute la colonne "Nom"
+            data.append(prefs.get(col, 0))
+
+        # Vérifie si l'utilisateur existe
+        records = sheet_preferences.get_all_records()
+        noms = [r["Nom"] for r in records]
         if nom in noms:
-            index = noms.index(nom) + 2  # +2 car index Excel commence à 1 et il y a un header
-            range_str = f"A{index}:{chr(64 + len(headers))}{index}"
-            sheet_preferences.update(range_str, [data])
+            index = noms.index(nom) + 2
+            sheet_preferences.update(f"A{index}:{chr(64 + len(headers))}{index}", [data])
         else:
             sheet_preferences.append_row(data)
 
         return True, ""
     except Exception as e:
         return False, str(e)
+
 
 def save_preferences_2(nom, mode_questionnaire):
     try:
@@ -3200,10 +3205,10 @@ elif page == "Réglages":
     else:
         role = USERS[username]["role"]
 
-        # Charger les préférences
+        # Charger les préférences selon le rôle
         prefs = get_preferences(username)
 
-        # Créer une ligne vide avec valeurs par défaut si besoin
+        # Créer une ligne dans Google Sheet si elle n'existe pas
         save_preferences(username, prefs)
 
         if role == "player":
