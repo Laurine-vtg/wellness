@@ -3463,40 +3463,33 @@ elif page == "Réglages":
 
 # ========================================================= Page informations =========================================================
 elif page == "Informations":
-    st.title ("Informations questionnaire")
-    st.write("Voici le questionnaire auxquel les joueurs répondent :")
-    
-    prefs = get_preferences(st.session_state.get("username", ""))
-    frequence = prefs.get("mode_questionnaire", "Tous les jours")
-    
-    if frequence == "Tous les jours":
-     st.subheader("🏃‍♂️Activité du jour")   
-     st.write("As-tu fait une séance ou un match à cette date ? Si oui, affichage de la question sur l'intensité.")   
-     st.subheader("🔥Intensité")
-     st.write("Évalue entre 1 et 10 l'intensité de la séance/du match (1 = aucune intensité, 10 = intensité maximale).")
-     st.subheader("💤Sommeil")
-     st.write("Évalue entre 1 et 10 la qualité de ton dernier sommeil (1 = très mal dormi, 10 = très bien dormi).")
-     st.subheader("🥱Fatigue")
-     st.write("Évalue entre 1 et 10 ton niveau de fatigue (1 = aucune fatigue, 10 = exténué).")
-     st.subheader("😟Stress")
-     st.write("Évalue entre 1 et 10 ton stress actuel (1 = aucun stress, 10 = très stressé).")
-     st.subheader("⚡Dynamisme")
-     st.write("Évalue entre 1 et 10 ton dynamisme actuel (1 = très peu dynamique, 10 = très dynamique).")
-     st.subheader("🤕Douleurs")
-     st.write("As-tu des douleurs et/ou des courbatures ? Si oui, où sont les douleurs ? Précises les informations.")
-    else :   
-     st.subheader("🔥Intensité")
-     st.write("Évalue entre 1 et 10 l'intensité de la séance/du match (1 = aucune intensité, 10 = intensité maximale).")    
-     st.subheader("💤Sommeil")
-     st.write("Évalue entre 1 et 10 la qualité de ton dernier sommeil (1 = très mal dormi, 10 = très bien dormi).")
-     st.subheader("🥱Fatigue")
-     st.write("Évalue entre 1 et 10 ton niveau de fatigue (1 = aucune fatigue, 10 = exténué).")
-     st.subheader("😟Stress")
-     st.write("Évalue entre 1 et 10 ton stress actuel (1 = aucun stress, 10 = très stressé).")
-     st.subheader("⚡Dynamisme")
-     st.write("Évalue entre 1 et 10 ton dynamisme actuel (1 = très peu dynamique, 10 = très dynamique).")
-     st.subheader("🤕Douleurs")
-     st.write("As-tu des douleurs et/ou des courbatures ? Si oui, où sont les douleurs ? Précises les informations.")
-    
-    
-    
+    st.title("Informations questionnaire")
+    st.write("Voici le questionnaire auquel les joueurs répondent :")
+
+    username = st.session_state.get("username", "")
+    if not username:
+        st.error("Utilisateur non connecté.")
+    else:
+        frequence = get_mode_questionnaire(username)
+
+        if frequence == "Tous les jours":
+            st.subheader("🏃‍♂️Activité du jour")
+            st.write("As-tu fait une séance ou un match à cette date ? Si oui, affichage de la question sur l'intensité.")
+
+        st.subheader("🔥Intensité")
+        st.write("Évalue entre 1 et 10 l'intensité de la séance/du match (1 = aucune intensité, 10 = intensité maximale).")
+
+        st.subheader("💤Sommeil")
+        st.write("Évalue entre 1 et 10 la qualité de ton dernier sommeil (1 = très mal dormi, 10 = très bien dormi).")
+
+        st.subheader("🥱Fatigue")
+        st.write("Évalue entre 1 et 10 ton niveau de fatigue (1 = aucune fatigue, 10 = exténué).")
+
+        st.subheader("😟Stress")
+        st.write("Évalue entre 1 et 10 ton stress actuel (1 = aucun stress, 10 = très stressé).")
+
+        st.subheader("⚡Dynamisme")
+        st.write("Évalue entre 1 et 10 ton dynamisme actuel (1 = très peu dynamique, 10 = très dynamique).")
+
+        st.subheader("🤕Douleurs")
+        st.write("As-tu des douleurs et/ou des courbatures ? Si oui, où sont les douleurs ? Précise les informations.")
