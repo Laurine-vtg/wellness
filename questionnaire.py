@@ -121,9 +121,10 @@ def get_preferences(nom):
         records = sheet_preferences.get_all_records()
         for row in records:
             if row["Nom"] == nom:
-                return row
+                # Convertir tous les champs sauf "Nom" en bool
+                return {k: (v if k == "Nom" else bool(v)) for k, v in row.items()}
 
-        # Si pas trouvé → valeurs par défaut selon le rôle
+        # Sinon, on crée des préférences par défaut selon le rôle
         user_info = USERS.get(nom)
         role = user_info.get("role") if user_info else "player"
 
@@ -133,18 +134,16 @@ def get_preferences(nom):
         for col in headers:
             if col == "Nom":
                 continue
-            # Champs coach uniquement
             if col.endswith("_coach") or col in ["show_cadran", "show_cadran_synthèse"]:
-                default_prefs[col] = 1 if role == "coach" else 0
+                default_prefs[col] = True if role == "coach" else False
             else:
-                default_prefs[col] = 1 if role == "player" else 0
+                default_prefs[col] = True if role == "player" else False
 
         return default_prefs
 
     except Exception as e:
         st.error(f"Erreur lors du chargement des préférences : {e}")
         return {}
-
 
 def get_mode_questionnaire(nom):
     try:
@@ -162,14 +161,15 @@ def save_preferences(nom, prefs):
     try:
         headers = sheet_preferences.row_values(1)
 
-        # Créer la ligne dans l’ordre des colonnes
+        # Construire la ligne dans l’ordre des colonnes
         data = [nom]
-        for col in headers[1:]:  # on saute la colonne "Nom"
-            data.append(prefs.get(col, 0))
+        for col in headers[1:]:
+            data.append(prefs.get(col, False))  # False par défaut
 
-        # Vérifie si l'utilisateur existe
+        # Vérifie si l'utilisateur existe déjà
         records = sheet_preferences.get_all_records()
         noms = [r["Nom"] for r in records]
+
         if nom in noms:
             index = noms.index(nom) + 2
             sheet_preferences.update(f"A{index}:{chr(64 + len(headers))}{index}", [data])
