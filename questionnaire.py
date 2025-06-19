@@ -115,17 +115,12 @@ def supprimer_reponse(nom, date):
     except Exception as e:
         return False, str(e)
 
+# Fonction pour récupérer les préférences utilisateur
 def get_preferences(nom):
     try:
         records = sheet_preferences.get_all_records()
         for row in records:
             if row["Nom"] == nom:
-                # Convertir mode_questionnaire bool en string lisible
-                if "mode_questionnaire" in row:
-                    if row["mode_questionnaire"] in [True, 1, "1", "TRUE", "true"]:
-                        row["mode_questionnaire"] = "Tous les jours"
-                    else:
-                        row["mode_questionnaire"] = "Seulement les jours de séance ou de match"
                 return row
 
         # Si pas trouvé → valeurs par défaut selon le rôle
@@ -139,11 +134,8 @@ def get_preferences(nom):
             if col == "Nom":
                 continue
             # Champs coach uniquement
-            if col.endswith("_coach") or col in ["show_cadran", "show_cadran_synthèse"]:
+            if col.endswith("_coach") or col in ["show_cadran", "show_cadran_synthèse", "mode_questionnaire"]:
                 default_prefs[col] = 1 if role == "coach" else 0
-            elif col == "mode_questionnaire":
-                # Valeur par défaut en texte
-                default_prefs[col] = "Tous les jours" if role == "coach" else "Tous les jours"
             else:
                 default_prefs[col] = 1 if role == "player" else 0
 
@@ -153,17 +145,10 @@ def get_preferences(nom):
         st.error(f"Erreur lors du chargement des préférences : {e}")
         return {}
 
-
+# Fonction pour sauvegarder les préférences utilisateur
 def save_preferences(nom, prefs):
     try:
         headers = sheet_preferences.row_values(1)
-
-        # Convertir mode_questionnaire en booléen pour la sauvegarde
-        if "mode_questionnaire" in prefs:
-            if prefs["mode_questionnaire"] == "Tous les jours":
-                prefs["mode_questionnaire"] = True
-            else:
-                prefs["mode_questionnaire"] = False
 
         # Créer la ligne dans l’ordre des colonnes du Google Sheet
         data = [nom]
