@@ -121,86 +121,49 @@ def get_preferences(nom):
         records = sheet_preferences.get_all_records()
         for row in records:
             if row["Nom"] == nom:
-                # Convertir les "TRUE"/"FALSE" en booléens True/False
-                for k, v in row.items():
-                    if isinstance(v, str):
-                        if v.upper() == "TRUE":
-                            row[k] = True
-                        elif v.upper() == "FALSE":
-                            row[k] = False
                 return row
-        # Valeurs par défaut si nom non trouvé
-        return {
-            "mode_questionnaire": "Tous les jours",
-            "show_seance": True,
-            "show_weekly_intensity": True,
-            "show_weekly_parameter": True,
-            "show_weekly_score_bien": True,
-            "show_weekly_comp": True,
-            "show_monthly_intensity": True,
-            "show_monthly_parameter": True,
-            "show_monthly_score_bien": True,
-            "show_monthly_comp": True,
-            "show_monthly_zscore": True,
-            "show_global_intensity": True,
-            "show_global_parameter": True,
-            "show_global_score_bien": True,
-            "show_global_zscore": True,
-            "show_seance_coach": True,
-            "show_weekly_intensity_coach": True,
-            "show_weekly_parameter_coach": True,
-            "show_weekly_score_bien_coach": True,
-            "show_weekly_comp_coach": True,
-            "show_monthly_intensity_coach": True,
-            "show_monthly_parameter_coach": True,
-            "show_monthly_score_bien_coach": True,
-            "show_monthly_comp_coach": True,
-            "show_monthly_zscore_coach": True,
-            "show_global_intensity_coach": True,
-            "show_global_parameter_coach": True,
-            "show_global_score_bien_coach": True,
-            "show_global_zscore_coach": True,
-            "show_team_intensity_coach": True,
-            "show_cadran": True,
-            "show_team_bien_etre_coach": True,
-            "show_team_douleurs_coach": True,
-            "show_team_synthèse_intensity_coach": True,
-            "show_cadran_synthèse": True,
-            "show_team_synthèse_bien_etre_coach": True,
-            "show_seance_team_coach": True
-        }
-    except:
+
+        # Si pas trouvé → valeurs par défaut selon le rôle
+        user_info = USERS.get(nom)
+        role = user_info.get("role") if user_info else "player"
+
+        headers = sheet_preferences.row_values(1)
+        default_prefs = {}
+
+        for col in headers:
+            if col == "Nom":
+                continue
+            # Champs coach uniquement
+            if col.endswith("_coach") or col in ["show_cadran", "show_cadran_synthèse", "mode_questionnaire"]:
+                default_prefs[col] = 1 if role == "coach" else 0
+            else:
+                default_prefs[col] = 1 if role == "player" else 0
+
+        return default_prefs
+
+    except Exception as e:
+        st.error(f"Erreur lors du chargement des préférences : {e}")
         return {}
 
-def number_to_column(n):
-    string = ""
-    while n > 0:
-        n, remainder = divmod(n - 1, 26)
-        string = chr(65 + remainder) + string
-    return string
-
+# Fonction pour sauvegarder les préférences utilisateur
 def save_preferences(nom, prefs):
     try:
-        records = sheet_preferences.get_all_records()
-        noms = [r["Nom"] for r in records]
         headers = sheet_preferences.row_values(1)
 
-        data = []
-        for h in headers:
-            if h == "Nom":
-                data.append(nom)
-            else:
-                val = prefs.get(h, False)
-                if isinstance(val, bool):
-                    val = "TRUE" if val else "FALSE"
-                data.append(val)
+        # Créer la ligne dans l’ordre des colonnes
+        data = [nom]
+        for col in headers[1:]:  # on saute la colonne "Nom"
+            data.append(prefs.get(col, 0))
 
+        # Vérifie si l'utilisateur existe
+        records = sheet_preferences.get_all_records()
+        noms = [r["Nom"] for r in records]
         if nom in noms:
             index = noms.index(nom) + 2
-            last_col = number_to_column(len(headers))
-            sheet_preferences.update(f"A{index}:{last_col}{index}", [data])
+            sheet_preferences.update(f"A{index}:{chr(64+len(headers))}{index}", [data])
         else:
             sheet_preferences.append_row(data)
+
         return True, ""
     except Exception as e:
         return False, str(e)
@@ -208,11 +171,14 @@ def save_preferences(nom, prefs):
     
 def save_preferences_2(nom, mode_questionnaire):
     try:
+        # Ouvrir la feuille 'preferences'
         sheet = spreadsheet.worksheet("preferences")
-        data = sheet.get_all_values()
-        headers = data[0]
 
-        # Trouver les index des colonnes "Nom" et "mode_questionnaire"
+        # Récupérer toutes les données
+        data = sheet.get_all_values()
+
+        # Trouver l’index des colonnes 'Nom' et 'mode_questionnaire'
+        headers = data[0]
         try:
             col_nom = headers.index("Nom")
         except ValueError:
@@ -222,7 +188,7 @@ def save_preferences_2(nom, mode_questionnaire):
         except ValueError:
             return False, "Colonne 'mode_questionnaire' introuvable"
 
-        # Chercher la ligne correspondant au nom
+        # Chercher la ligne où 'Nom' correspond
         row_to_update = None
         for i, row in enumerate(data[1:], start=2):
             if len(row) > col_nom and row[col_nom] == nom:
@@ -233,7 +199,7 @@ def save_preferences_2(nom, mode_questionnaire):
             # Mettre à jour la cellule
             sheet.update_cell(row_to_update, col_mode + 1, mode_questionnaire)
         else:
-            # Ajouter une nouvelle ligne avec valeurs vides sauf Nom et mode_questionnaire
+            # Ajouter une nouvelle ligne
             new_row = [""] * len(headers)
             new_row[col_nom] = nom
             new_row[col_mode] = mode_questionnaire
@@ -3235,63 +3201,68 @@ elif page == "Données brutes":
 
 # ============================================================= Page réglages ==========================================================
 elif page == "Réglages":
-    nom = st.session_state.get("username", "")
+    username = st.session_state.get("username", "")
+    if not username or username not in USERS:
+        st.error("Utilisateur non connecté ou inconnu.")
+    else:
+        role = USERS[username]["role"]
 
-    prefs = get_preferences(nom)
+        # Charger les préférences selon le rôle
+        prefs = get_preferences(username)
 
-    username = st.session_state.get("username")
-    role = USERS[username]["role"]
+        # Créer une ligne dans Google Sheet si elle n'existe pas
+        save_preferences(username, prefs)
 
 # Page réglage joueur.
-    if role == "player":
-     st.subheader("⚙️ Réglages d’affichage")   
-     with st.form("form_prefs"):
-        st.write("Coche les éléments que tu veux afficher sur ta page compte rendu individuel et enregistres :")
+        if role == "player":
+         st.subheader("⚙️ Réglages d’affichage")   
+         with st.form("form_prefs"):
+          st.write("Coche les éléments que tu veux afficher sur ta page compte rendu individuel et enregistres :")
 
         # Quotidien
-        st.markdown("#### 📍Suivi quotidien")
-        updated_prefs = {
+          st.markdown("#### 📍Suivi quotidien")
+          updated_prefs = {
             "show_seance": st.checkbox("Graphique quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance"]),
-        }
+          }
 
         # Hebdomadaire
-        st.markdown("#### 📆Suivi hebdomadaire")
-        updated_prefs.update({
+          st.markdown("#### 📆Suivi hebdomadaire")
+          updated_prefs.update({
             "show_weekly_intensity": st.checkbox("Graphique semaine - Intensité ", prefs["show_weekly_intensity"]),
             "show_weekly_parameter": st.checkbox("Graphique semaine - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_weekly_parameter"]),
             "show_weekly_score_bien": st.checkbox("Graphique semaine - Score bien-être", prefs["show_weekly_score_bien"]),
             "show_weekly_comp": st.checkbox("Comparaison semaine précédente", prefs["show_weekly_comp"]),
-        })
+          })
 
         # Mensuel
-        st.markdown("#### 📅Suivi mensuel")
-        updated_prefs.update({
+          st.markdown("#### 📅Suivi mensuel")
+          updated_prefs.update({
             "show_monthly_intensity": st.checkbox("Graphique mois - Intensité", prefs["show_monthly_intensity"]),
             "show_monthly_parameter": st.checkbox("Graphique mois - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_monthly_parameter"]),
             "show_monthly_zscore": st.checkbox("Graphique mois - Z-Score", prefs["show_monthly_zscore"]),
             "show_monthly_score_bien":st.checkbox("Graphique mois - Score bien-être", prefs["show_monthly_score_bien"]),
             "show_monthly_comp": st.checkbox("Comparaison mois précédent", prefs["show_monthly_comp"]),
-        })
+          })
 
         # Synthèse
-        st.markdown("#### 📊Synthèse")
-        updated_prefs.update({
+          st.markdown("#### 📊Synthèse")
+          updated_prefs.update({
             "show_global_intensity": st.checkbox("Graphique général - Intensité", prefs["show_global_intensity"]),
             "show_global_parameter": st.checkbox("Graphique général - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_global_parameter"]),
             "show_global_zscore": st.checkbox("Graphique général - Z-Score", prefs["show_global_zscore"]),
             "show_global_score_bien": st.checkbox("Graphique général - Score bien-être", prefs["show_global_score_bien"]),
-        })
+          })
 
-        submitted = st.form_submit_button("Enregistrer")
-        if submitted:
+          submitted = st.form_submit_button("Enregistrer")
+          if submitted:
             save_preferences(username, updated_prefs)
             st.success("Préférences mises à jour.")
      
 # Page réglage coach.            
-    if role == "coach":
-     st.subheader("⚙️ Réglages de fréquence des réponses")
+      if role == "coach":
+       st.subheader("⚙️ Réglages de fréquence des réponses")
 
-     with st.form("form_frequence"):
+       with st.form("form_frequence"):
         frequence_options = ["Tous les jours", "Seulement les jours de séance ou de match"]
         current_freq = prefs.get("mode_questionnaire", "Tous les jours")
         default_index = frequence_options.index(current_freq) if current_freq in frequence_options else 0
@@ -3307,8 +3278,8 @@ elif page == "Réglages":
             st.session_state["mode_questionnaire"] = frequence_questionnaire
             st.success("Préférence enregistrée ✅")
        
-     st.subheader("⚙️ Réglages d’affichage")
-     with st.form("form_prefs"):
+       st.subheader("⚙️ Réglages d’affichage")
+       with st.form("form_prefs"):
         st.subheader("Page compte rendu individuel")
         st.write("Coche les éléments que tu veux afficher sur ta page compte rendu individuel et enregistres :")
 
