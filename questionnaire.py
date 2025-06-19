@@ -70,6 +70,13 @@ spreadsheet = get_spreadsheet(client, "wellness_data")
 sheet_questionnaire = get_worksheet(spreadsheet, "questionnaire")
 sheet_preferences = get_worksheet(spreadsheet, "preferences")
 
+# Fonction sécurisée pour ouvrir une worksheet
+def safe_worksheet_open(spreadsheet, sheet_name):
+    try:
+        return spreadsheet.worksheet(sheet_name)
+    except Exception as e:
+        st.error(f"Erreur lors de l'ouverture de la feuille '{sheet_name}' : {e}")
+        return None
 
 # Fonction pour enregistrer réponse au questionnaire
 
