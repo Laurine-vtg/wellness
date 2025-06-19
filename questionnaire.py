@@ -161,10 +161,16 @@ def save_preferences(nom, prefs):
     try:
         headers = sheet_preferences.row_values(1)
 
-        # Construire la ligne dans l’ordre des colonnes
+        # Construire la ligne dans l’ordre des colonnes, convertir bool en string "TRUE"/"FALSE"
         data = [nom]
         for col in headers[1:]:
-            data.append(prefs.get(col, False))  # False par défaut
+            val = prefs.get(col, False)
+            if isinstance(val, bool):
+                val = "TRUE" if val else "FALSE"
+            else:
+                # Si autre type, forcer en string
+                val = str(val)
+            data.append(val)
 
         # Vérifie si l'utilisateur existe déjà
         records = sheet_preferences.get_all_records()
@@ -179,7 +185,6 @@ def save_preferences(nom, prefs):
         return True, ""
     except Exception as e:
         return False, str(e)
-
 
 def save_preferences_2(nom, mode_questionnaire):
     try:
