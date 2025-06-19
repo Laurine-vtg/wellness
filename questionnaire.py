@@ -3049,7 +3049,18 @@ elif page == "Compte rendu collectif":
  # --------------------------------------------------------Synthèse pour une période donnée (collectif) -------------------------------                           
     st.subheader("📊Synthèse sur une période donnée")
     # --- Selection de la plage de dates ---
-    df_club = df[df["Club"] == club]  # Défini toujours
+    # --- Vérification et filtrage club ---
+    if isinstance(df, pd.DataFrame) and not df.empty:
+     if "Club" in df.columns:
+        df["Club"] = df["Club"].str.strip().str.lower()
+        df_club = df[df["Club"] == club]
+     else:
+        st.warning("⚠️ La colonne 'Club' est absente des données.")
+        st.stop()
+    else:
+     st.warning("⚠️ Les données sont vides ou non chargées.")
+     st.stop()
+
 
     if df_club.empty:
      st.info("Aucune donnée enregistrée.")
