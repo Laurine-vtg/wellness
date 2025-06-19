@@ -3307,7 +3307,6 @@ elif page == "Réglages":
                     if success:
                         st.session_state["prefs"] = updated_prefs
                         st.success("Préférences mises à jour.")
-                        st.experimental_rerun()
                     else:
                         st.error(f"Erreur lors de la sauvegarde : {msg}")
 
@@ -3330,7 +3329,6 @@ elif page == "Réglages":
                     if success:
                         st.session_state["mode_questionnaire"] = frequence_questionnaire
                         st.success("Préférence enregistrée ✅")
-                        st.experimental_rerun()
                     else:
                         st.error(f"Erreur lors de la sauvegarde : {msg}")
 
@@ -3459,7 +3457,6 @@ elif page == "Réglages":
                     if success:
                         st.session_state["prefs"] = updated_prefs
                         st.success("Préférences mises à jour.")
-                        st.experimental_rerun()
                     else:
                         st.error(f"Erreur lors de la sauvegarde : {msg}")
 
