@@ -338,7 +338,7 @@ ACCESS_RIGHTS = {
     ],
     "player": [
         "Questionnaire de suivi",
-        "Compte rendu individuel ()",
+        "Compte rendu individuel (joueur)",
         "Réglages"
     ]
 }
