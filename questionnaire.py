@@ -131,21 +131,23 @@ def get_preferences(nom):
         records = sheet_preferences.get_all_records()
         for row in records:
             if row["Nom"] == nom:
-                return {k: (v if k == "Nom" else bool(int(v))) for k, v in row.items()}
+                return row
 
-        # Si pas trouvé, générer des valeurs par défaut
+        # Si pas trouvé → valeurs par défaut selon le rôle
         user_info = USERS.get(nom)
         role = user_info.get("role") if user_info else "player"
 
         headers = sheet_preferences.row_values(1)
         default_prefs = {}
+
         for col in headers:
             if col == "Nom":
                 continue
+            # Champs coach uniquement
             if col.endswith("_coach") or col in ["show_cadran", "show_cadran_synthèse"]:
-                default_prefs[col] = True if role == "coach" else False
+                default_prefs[col] = 1 if role == "coach" else 0
             else:
-                default_prefs[col] = True if role == "player" else False
+                default_prefs[col] = 1 if role == "player" else 0
 
         return default_prefs
 
