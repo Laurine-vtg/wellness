@@ -157,25 +157,39 @@ def get_mode_questionnaire(nom):
         return "Tous les jours"
 
 # Fonction pour sauvegarder les préférences utilisateur
+def col_num_to_letter(n):
+    """Convertit un numéro de colonne en lettre Excel (ex: 1 -> A, 27 -> AA)"""
+    string = ""
+    while n > 0:
+        n, remainder = divmod(n - 1, 26)
+        string = chr(65 + remainder) + string
+    return string
+
 def save_preferences(nom, prefs):
     try:
-        headers = sheet_preferences.row_values(1)
+        headers = sheet_preferences.row_values(1)  # récupère les titres de colonnes
+        num_cols = len(headers)  # nombre total de colonnes
 
+        # Construire la liste de données dans l'ordre des colonnes, en convertissant bool et int en TRUE/FALSE
         data = [nom]
         for col in headers[1:]:
             val = prefs.get(col, False)
             if isinstance(val, bool):
                 val = "TRUE" if val else "FALSE"
+            elif isinstance(val, int):
+                val = "TRUE" if val == 1 else "FALSE"
             else:
                 val = str(val)
             data.append(val)
 
+        # Vérifier si l'utilisateur existe déjà dans la feuille
         records = sheet_preferences.get_all_records()
         noms = [r["Nom"] for r in records]
 
         if nom in noms:
-            index = noms.index(nom) + 2
-            sheet_preferences.update(f"A{index}:{chr(64 + len(headers))}{index}", [data])
+            index = noms.index(nom) + 2  # +2 car index start à 0 et ligne 1 = header
+            end_col = col_num_to_letter(num_cols)  # par ex 35 -> AI
+            sheet_preferences.update(f"A{index}:{end_col}{index}", [data])
         else:
             sheet_preferences.append_row(data)
 
