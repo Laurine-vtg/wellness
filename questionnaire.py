@@ -148,22 +148,50 @@ def get_preferences(nom):
 # Fonction pour sauvegarder les préférences utilisateur
 def save_preferences(nom, prefs):
     try:
-        headers = sheet_preferences.row_values(1)
-
-        # Créer la ligne dans l’ordre des colonnes du Google Sheet
-        data = [nom]
-        for col in headers[1:]:  # On saute "Nom"
-            data.append(prefs.get(col, 0))  # 0 si la clé n’existe pas
-
-        # Vérifie si l'utilisateur existe déjà
         records = sheet_preferences.get_all_records()
         noms = [r["Nom"] for r in records]
+        data = [nom] + list(prefs.values())
+        headers = sheet_preferences.row_values(1)
 
         if nom in noms:
-            index = noms.index(nom) + 2  # +2 à cause de l'en-tête
-            sheet_preferences.update(f"A{index}:{chr(64+len(headers))}{index}", [data])
+            index = noms.index(nom) + 2  # +2 car index Excel commence à 1 et il y a un header
+            range_str = f"A{index}:{chr(64 + len(headers))}{index}"
+            sheet_preferences.update(range_str, [data])
         else:
             sheet_preferences.append_row(data)
+
+        return True, ""
+    except Exception as e:
+        return False, str(e)
+
+def save_preferences_2(nom, mode_questionnaire):
+    try:
+        sheet = spreadsheet.worksheet("preferences")
+        data = sheet.get_all_values()
+        headers = data[0]
+
+        try:
+            col_nom = headers.index("Nom")
+        except ValueError:
+            return False, "Colonne 'Nom' introuvable"
+        try:
+            col_mode = headers.index("mode_questionnaire")
+        except ValueError:
+            return False, "Colonne 'mode_questionnaire' introuvable"
+
+        row_to_update = None
+        for i, row in enumerate(data[1:], start=2):
+            if len(row) > col_nom and row[col_nom] == nom:
+                row_to_update = i
+                break
+
+        if row_to_update:
+            sheet.update_cell(row_to_update, col_mode + 1, mode_questionnaire)
+        else:
+            new_row = [""] * len(headers)
+            new_row[col_nom] = nom
+            new_row[col_mode] = mode_questionnaire
+            sheet.append_row(new_row)
 
         return True, ""
     except Exception as e:
@@ -3159,146 +3187,138 @@ elif page == "Réglages":
     else:
         role = USERS[username]["role"]
 
-        # Charger les préférences selon le rôle
+        # Charger les préférences
         prefs = get_preferences(username)
 
-        # Créer une ligne dans Google Sheet si elle n'existe pas
+        # Créer une ligne vide avec valeurs par défaut si besoin
         save_preferences(username, prefs)
 
-# Page réglage joueur.
         if role == "player":
-         st.subheader("⚙️ Réglages d’affichage")   
-         with st.form("form_prefs"):
-          st.write("Coche les éléments que tu veux afficher sur ta page compte rendu individuel et enregistres :")
+            st.subheader("⚙️ Réglages d’affichage")   
+            with st.form("form_prefs"):
+                st.write("Coche les éléments que tu veux afficher sur ta page compte rendu individuel et enregistres :")
 
-          # Quotidien
-          st.markdown("#### 📍Suivi quotidien")
-          updated_prefs = {
-            "show_seance": st.checkbox("Graphique quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance"]),
-          }
+                # Quotidien
+                st.markdown("#### 📍Suivi quotidien")
+                updated_prefs = {
+                    "show_seance": st.checkbox("Graphique quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance"]),
+                }
 
-          # Hebdomadaire
-          st.markdown("#### 📆Suivi hebdomadaire")
-          updated_prefs.update({
-            "show_weekly_intensity": st.checkbox("Graphique semaine - Intensité ", prefs["show_weekly_intensity"]),
-            "show_weekly_parameter": st.checkbox("Graphique semaine - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_weekly_parameter"]),
-            "show_weekly_score_bien": st.checkbox("Graphique semaine - Score bien-être", prefs["show_weekly_score_bien"]),
-            "show_weekly_comp": st.checkbox("Comparaison semaine précédente", prefs["show_weekly_comp"]),
-          })
+                # Hebdomadaire
+                st.markdown("#### 📆Suivi hebdomadaire")
+                updated_prefs.update({
+                    "show_weekly_intensity": st.checkbox("Graphique semaine - Intensité ", prefs["show_weekly_intensity"]),
+                    "show_weekly_parameter": st.checkbox("Graphique semaine - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_weekly_parameter"]),
+                    "show_weekly_score_bien": st.checkbox("Graphique semaine - Score bien-être", prefs["show_weekly_score_bien"]),
+                    "show_weekly_comp": st.checkbox("Comparaison semaine précédente", prefs["show_weekly_comp"]),
+                })
 
-          # Mensuel
-          st.markdown("#### 📅Suivi mensuel")
-          updated_prefs.update({
-            "show_monthly_intensity": st.checkbox("Graphique mois - Intensité", prefs["show_monthly_intensity"]),
-            "show_monthly_parameter": st.checkbox("Graphique mois - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_monthly_parameter"]),
-            "show_monthly_zscore": st.checkbox("Graphique mois - Z-Score", prefs["show_monthly_zscore"]),
-            "show_monthly_score_bien":st.checkbox("Graphique mois - Score bien-être", prefs["show_monthly_score_bien"]),
-            "show_monthly_comp": st.checkbox("Comparaison mois précédent", prefs["show_monthly_comp"]),
-          })
+                # Mensuel
+                st.markdown("#### 📅Suivi mensuel")
+                updated_prefs.update({
+                    "show_monthly_intensity": st.checkbox("Graphique mois - Intensité", prefs["show_monthly_intensity"]),
+                    "show_monthly_parameter": st.checkbox("Graphique mois - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_monthly_parameter"]),
+                    "show_monthly_zscore": st.checkbox("Graphique mois - Z-Score", prefs["show_monthly_zscore"]),
+                    "show_monthly_score_bien":st.checkbox("Graphique mois - Score bien-être", prefs["show_monthly_score_bien"]),
+                    "show_monthly_comp": st.checkbox("Comparaison mois précédent", prefs["show_monthly_comp"]),
+                })
 
-          # Synthèse
-          st.markdown("#### 📊Synthèse")
-          updated_prefs.update({
-            "show_global_intensity": st.checkbox("Graphique général - Intensité", prefs["show_global_intensity"]),
-            "show_global_parameter": st.checkbox("Graphique général - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_global_parameter"]),
-            "show_global_zscore": st.checkbox("Graphique général - Z-Score", prefs["show_global_zscore"]),
-            "show_global_score_bien": st.checkbox("Graphique général - Score bien-être", prefs["show_global_score_bien"]),
-          })
+                # Synthèse
+                st.markdown("#### 📊Synthèse")
+                updated_prefs.update({
+                    "show_global_intensity": st.checkbox("Graphique général - Intensité", prefs["show_global_intensity"]),
+                    "show_global_parameter": st.checkbox("Graphique général - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_global_parameter"]),
+                    "show_global_zscore": st.checkbox("Graphique général - Z-Score", prefs["show_global_zscore"]),
+                    "show_global_score_bien": st.checkbox("Graphique général - Score bien-être", prefs["show_global_score_bien"]),
+                })
 
-          # Garder la fréquence même si on ne la modifie pas ici
-          updated_prefs["mode_questionnaire"] = prefs.get("mode_questionnaire", "Tous les jours")
+                submitted = st.form_submit_button("Enregistrer")
+                if submitted:
+                    save_preferences(username, updated_prefs)
+                    st.success("Préférences mises à jour.")
 
-          submitted = st.form_submit_button("Enregistrer")
-          if submitted:
-            save_preferences(username, updated_prefs)
-            st.success("Préférences mises à jour.")
-
-# Page réglage coach.            
         if role == "coach":
-         st.subheader("⚙️ Réglages de fréquence des réponses")
+            st.subheader("⚙️ Réglages de fréquence des réponses")
+            with st.form("form_frequence"):
+                frequence_options = ["Tous les jours", "Seulement les jours de séance ou de match"]
+                current_freq = prefs.get("mode_questionnaire", "Tous les jours")
+                default_index = frequence_options.index(current_freq) if current_freq in frequence_options else 0
 
-         with st.form("form_frequence"):
-          frequence_options = ["Tous les jours", "Seulement les jours de séance ou de match"]
-          current_freq = prefs.get("mode_questionnaire", "Tous les jours")
-          default_index = frequence_options.index(current_freq) if current_freq in frequence_options else 0
+                frequence_questionnaire = st.radio(
+                    "À quelle fréquence les joueurs doivent-ils répondre au questionnaire ?",
+                    frequence_options,
+                    index=default_index
+                )
+                submitted_freq = st.form_submit_button("Enregistrer")
+                if submitted_freq:
+                    save_preferences_2(username, frequence_questionnaire)
+                    st.session_state["mode_questionnaire"] = frequence_questionnaire
+                    st.success("Préférence enregistrée ✅")
 
-          frequence_questionnaire = st.radio(
-              "À quelle fréquence les joueurs doivent-ils répondre au questionnaire ?",
-              frequence_options,
-              index=default_index
-          )
-          submitted_freq = st.form_submit_button("Enregistrer")
-          if submitted_freq:
-              prefs["mode_questionnaire"] = frequence_questionnaire
-              save_preferences(username, prefs)
-              st.session_state["mode_questionnaire"] = frequence_questionnaire
-              st.success("Préférence enregistrée ✅")
-       
-         st.subheader("⚙️ Réglages d’affichage")
-         with st.form("form_prefs"):
+            st.subheader("⚙️ Réglages d’affichage")
+            with st.form("form_prefs"):
 
-          st.subheader("Page compte rendu collectif")
-          st.write("Coche les éléments que tu veux afficher sur ta page compte rendu collectif et enregistres :")
-          st.markdown("#### 📍Suivi quotidien")
-          updated_prefs.update({
-              "show_seance_team_coach":st.checkbox("Graphique collectif quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance_team_coach"]),
-              "show_team_intensity_coach": st.checkbox("Graphique collectif quotidien - Intensité", prefs["show_team_intensity_coach"]),
-              "show_cadran": st.checkbox("Graphique collectif quotidien - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_cadran"]),
-              "show_team_bien_etre_coach": st.checkbox("Graphique collectif quotidien - Score bien-être", prefs["show_team_bien_etre_coach"]),
-              "show_team_douleurs_coach": st.checkbox("Graphique collectif quotidien - Douleurs", prefs["show_team_douleurs_coach"]),
-          })
+                st.subheader("Page compte rendu collectif")
+                st.write("Coche les éléments que tu veux afficher sur ta page compte rendu collectif et enregistres :")
 
-          st.markdown("#### 📊Synthèse sur une période donnée")
-          updated_prefs.update({
-              "show_team_synthèse_intensity_coach": st.checkbox("Graphique collectif général - Intensité", prefs["show_team_synthèse_intensity_coach"]),
-              "show_cadran_synthèse": st.checkbox("Graphique collectif général - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_cadran_synthèse"]),
-              "show_team_synthèse_bien_etre_coach": st.checkbox("Graphique collectif général - Score bien-être", prefs["show_team_synthèse_bien_etre_coach"]),
-          })
-             
-          st.subheader("Page compte rendu individuel")
-          st.write("Coche les éléments que tu veux afficher sur ta page compte rendu individuel et enregistres :")
+                st.markdown("#### 📍Suivi quotidien")
+                updated_prefs.update({
+                    "show_seance_team_coach":st.checkbox("Graphique collectif quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance_team_coach"]),
+                    "show_team_intensity_coach": st.checkbox("Graphique collectif quotidien - Intensité", prefs["show_team_intensity_coach"]),
+                    "show_cadran": st.checkbox("Graphique collectif quotidien - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_cadran"]),
+                    "show_team_bien_etre_coach": st.checkbox("Graphique collectif quotidien - Score bien-être", prefs["show_team_bien_etre_coach"]),
+                    "show_team_douleurs_coach": st.checkbox("Graphique collectif quotidien - Douleurs", prefs["show_team_douleurs_coach"]),
+                })
 
-          # Quotidien 
-          st.markdown("#### 📍Suivi quotidien")
-          updated_prefs = {
-              "show_seance_coach": st.checkbox("Graphique quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance_coach"]),
-          }
+                st.markdown("#### 📊Synthèse sur une période donnée")
+                updated_prefs.update({
+                    "show_team_synthèse_intensity_coach": st.checkbox("Graphique collectif général - Intensité", prefs["show_team_synthèse_intensity_coach"]),
+                    "show_cadran_synthèse": st.checkbox("Graphique collectif général - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_cadran_synthèse"]),
+                    "show_team_synthèse_bien_etre_coach": st.checkbox("Graphique collectif général - Score bien-être", prefs["show_team_synthèse_bien_etre_coach"]),
+                })
 
-          # Hebdomadaire
-          st.markdown("#### 📆Suivi hebdomadaire")
-          updated_prefs.update({
-              "show_weekly_intensity_coach": st.checkbox("Graphique semaine - Intensité ", prefs["show_weekly_intensity_coach"]),
-              "show_weekly_parameter_coach": st.checkbox("Graphique semaine - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_weekly_parameter_coach"]),
-              "show_weekly_score_bien_coach": st.checkbox("Graphique semaine - Score bien-être", prefs["show_weekly_score_bien_coach"]),
-              "show_weekly_comp_coach": st.checkbox("Comparaison semaine précédente", prefs["show_weekly_comp_coach"]),
-          })
+                st.subheader("Page compte rendu individuel")
+                st.write("Coche les éléments que tu veux afficher sur ta page compte rendu individuel et enregistres :")
 
-          # Mensuel
-          st.markdown("#### 📅Suivi mensuel")
-          updated_prefs.update({
-              "show_monthly_intensity_coach": st.checkbox("Graphique mois - Intensité", prefs["show_monthly_intensity_coach"]),
-              "show_monthly_parameter_coach": st.checkbox("Graphique mois - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_monthly_parameter_coach"]),
-              "show_monthly_zscore_coach": st.checkbox("Graphique mois - Z-Score", prefs["show_monthly_zscore_coach"]),
-              "show_monthly_score_bien_coach":st.checkbox("Graphique mois - Score bien-être", prefs["show_monthly_score_bien_coach"]),
-              "show_monthly_comp_coach": st.checkbox("Comparaison mois précédent", prefs["show_monthly_comp_coach"]),
-          })
+                # Quotidien
+                st.markdown("#### 📍Suivi quotidien")
+                updated_prefs = {
+                    "show_seance_coach": st.checkbox("Graphique quotidien - Intensité/Stress/Fatigue/Sommeil/Dynamisme", prefs["show_seance_coach"]),
+                }
 
-          # Synthèse
-          st.markdown("#### 📊Synthèse")
-          updated_prefs.update({
-              "show_global_intensity_coach": st.checkbox("Graphique général - Intensité", prefs["show_global_intensity_coach"]),
-              "show_global_parameter_coach": st.checkbox("Graphique général - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_global_parameter_coach"]),
-              "show_global_zscore_coach": st.checkbox("Graphique général - Z-Score", prefs["show_global_zscore_coach"]),
-              "show_global_score_bien_coach": st.checkbox("Graphique général - Score bien-être", prefs["show_global_score_bien_coach"]),
-          })
-        
-          # Ajouter aussi la fréquence à la sauvegarde
-          updated_prefs["mode_questionnaire"] = prefs.get("mode_questionnaire", "Tous les jours")
+                # Hebdomadaire
+                st.markdown("#### 📆Suivi hebdomadaire")
+                updated_prefs.update({
+                    "show_weekly_intensity_coach": st.checkbox("Graphique semaine - Intensité ", prefs["show_weekly_intensity_coach"]),
+                    "show_weekly_parameter_coach": st.checkbox("Graphique semaine - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_weekly_parameter_coach"]),
+                    "show_weekly_score_bien_coach": st.checkbox("Graphique semaine - Score bien-être", prefs["show_weekly_score_bien_coach"]),
+                    "show_weekly_comp_coach": st.checkbox("Comparaison semaine précédente", prefs["show_weekly_comp_coach"]),
+                })
 
-          submitted = st.form_submit_button("Enregistrer")
-          if submitted:
-              save_preferences(username, updated_prefs)
-              st.success("Préférences mises à jour.") 
+                # Mensuel
+                st.markdown("#### 📅Suivi mensuel")
+                updated_prefs.update({
+                    "show_monthly_intensity_coach": st.checkbox("Graphique mois - Intensité", prefs["show_monthly_intensity_coach"]),
+                    "show_monthly_parameter_coach": st.checkbox("Graphique mois - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_monthly_parameter_coach"]),
+                    "show_monthly_zscore_coach": st.checkbox("Graphique mois - Z-Score", prefs["show_monthly_zscore_coach"]),
+                    "show_monthly_score_bien_coach":st.checkbox("Graphique mois - Score bien-être", prefs["show_monthly_score_bien_coach"]),
+                    "show_monthly_comp_coach": st.checkbox("Comparaison mois précédent", prefs["show_monthly_comp_coach"]),
+                })
+
+                # Synthèse individuelle
+                st.markdown("#### 📊Synthèse")
+                updated_prefs.update({
+                    "show_global_intensity_coach": st.checkbox("Graphique général - Intensité", prefs["show_global_intensity_coach"]),
+                    "show_global_parameter_coach": st.checkbox("Graphique général - Stress/Fatigue/Sommeil/Dynamisme", prefs["show_global_parameter_coach"]),
+                    "show_global_zscore_coach": st.checkbox("Graphique général - Z-Score", prefs["show_global_zscore_coach"]),
+                    "show_global_score_bien_coach": st.checkbox("Graphique général - Score bien-être", prefs["show_global_score_bien_coach"]),
+                })
+
+                submitted = st.form_submit_button("Enregistrer")
+                if submitted:
+                    save_preferences(username, updated_prefs)
+                    st.success("Préférences mises à jour.")
+
 # ========================================================= Page informations =========================================================
 elif page == "Informations":
     st.title ("Informations questionnaire")
