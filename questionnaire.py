@@ -503,7 +503,7 @@ if page == "Questionnaire de suivi":
 
     if coach_nom:
      prefs = get_mode_questionnaire(coach_nom)
-     mode = prefs.get("mode_questionnaire", "Tous les jours")
+     mode = prefs  # prefs est déjà la chaîne
 
      if mode == "Seulement les jours de séance ou de match":
         st.subheader("Remplis ce questionnaire après chaque séance/match.")
@@ -547,7 +547,8 @@ if page == "Questionnaire de suivi":
 # On charge les préférences du coach
     if coach_nom:
      prefs = get_mode_questionnaire(coach_nom)
-     mode = prefs.get("mode_questionnaire", "Tous les jours")
+     mode = prefs  # prefs est déjà la chaîne
+
     else:
      mode = "Tous les jours"  # valeur par défaut
 
