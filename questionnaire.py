@@ -21,6 +21,14 @@ import json
 import gspread
 from google.oauth2.service_account import Credentials
 
+# Fonction sécurisée pour ouvrir une worksheet Google Sheets
+def safe_worksheet_open(spreadsheet, sheet_name):
+    try:
+        return spreadsheet.worksheet(sheet_name)
+    except Exception as e:
+        st.warning(f"⚠️ Impossible d'ouvrir la feuille '{sheet_name}' : {e}")
+        return None
+
 # Définition des scopes Google API
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
