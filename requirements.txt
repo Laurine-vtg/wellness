@@ -3,4 +3,5 @@ Pillow
 pandas
 plotly
 numpy
-supabase-py
+git+https://github.com/supabase-community/supabase-py.git
+
