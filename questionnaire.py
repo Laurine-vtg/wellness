@@ -1,3 +1,17 @@
+import streamlit as st
+
+st.set_page_config(page_title="Wellness App", layout="wide")
+st.title("🔧 Lancement de l'application")
+
+try:
+    from supabase import create_client, Client
+    SUPABASE_URL = st.secrets["SUPABASE_URL"]
+    SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    st.success("✅ Connexion Supabase réussie")
+except Exception as e:
+    st.error(f"❌ Erreur de connexion Supabase : {e}")
+
 # ---------------------------
 # 📦 Connexion à Supabase
 # ---------------------------
