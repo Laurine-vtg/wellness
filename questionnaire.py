@@ -169,14 +169,12 @@ def save_preferences(nom, prefs):
 def get_mode_questionnaire(nom):
     try:
         res = supabase.table("frequence").select("*").filter("nom", "eq", nom).execute()
-        if res.error:
-            st.error(f"Erreur lecture fréquence : {res.error.message}")
+        data = res.data
+        if not data:
             return "Tous les jours"
-        if not res.data:
-            return "Tous les jours"
-        return res.data[0].get("mode_questionnaire", "Tous les jours")
+        return data[0].get("mode_questionnaire", "Tous les jours")
     except Exception as e:
-        st.error(f"Erreur lecture mode_questionnaire : {e}")
+        st.error(f"Erreur lecture mode_questionnaire : {str(e)}")
         return "Tous les jours"
 
 # Sauvegarde de la fréquence
