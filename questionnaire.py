@@ -32,8 +32,9 @@ def save_response(data):
             "Douleurs": data["Douleurs"],
             "Description_des_douleurs": data["Description des douleurs"],
         }]).execute()
-        if res.error:
-            return False, res.error.message
+        # Insertion réussie renvoie 201
+        if res.status_code != 201:
+            return False, f"Erreur API ({res.status_code}) : {res.status_text}"
         return True, ""
     except Exception as e:
         return False, str(e)
@@ -50,8 +51,8 @@ def load_responses(nom=None, club=None, date=None):
             query = query.filter("Date", "eq", date)
 
         res = query.execute()
-        if res.error:
-            st.error(res.error.message)
+        if res.status_code != 200:
+            st.error(f"Erreur API ({res.status_code}) : {res.status_text}")
             return pd.DataFrame()
         return pd.DataFrame(res.data)
     except Exception as e:
@@ -79,12 +80,12 @@ def supprimer_reponse(nom, date):
             .filter("nom", "eq", nom)\
             .filter("Date", "eq", date)\
             .execute()
-        if res.error or not res.data:
+        if res.status_code != 200 or not res.data:
             return False, "Réponse non trouvée"
         id_to_delete = res.data[0]["id"]
         delete_res = supabase.table("questionnaire").delete().filter("id", "eq", id_to_delete).execute()
-        if delete_res.error:
-            return False, delete_res.error.message
+        if delete_res.status_code != 200:
+            return False, f"Erreur API ({delete_res.status_code}) : {delete_res.status_text}"
         return True, ""
     except Exception as e:
         return False, str(e)
@@ -140,8 +141,8 @@ default_prefs = {
 # Chargement des préférences
 def get_preferences(nom):
     res = supabase.table("preferences").select("*").filter("nom", "eq", nom).execute()
-    if res.error:
-        st.error(f"Erreur chargement préférences : {res.error.message}")
+    if res.status_code != 200:
+        st.error(f"Erreur chargement préférences : ({res.status_code}) {res.status_text}")
         return {}
     if not res.data:
         return default_prefs
@@ -151,16 +152,19 @@ def get_preferences(nom):
 def save_preferences(nom, prefs):
     try:
         res = supabase.table("preferences").select("nom").filter("nom", "eq", nom).execute()
+        if res.status_code != 200:
+            return False, f"Erreur API ({res.status_code}) : {res.status_text}"
+
         data = {k: 1 if v else 0 for k, v in prefs.items()}
         data["nom"] = nom
         if res.data:
             update_res = supabase.table("preferences").update(data).filter("nom", "eq", nom).execute()
-            if update_res.error:
-                return False, update_res.error.message
+            if update_res.status_code != 200:
+                return False, f"Erreur API ({update_res.status_code}) : {update_res.status_text}"
         else:
             insert_res = supabase.table("preferences").insert(data).execute()
-            if insert_res.error:
-                return False, insert_res.error.message
+            if insert_res.status_code != 201:
+                return False, f"Erreur API ({insert_res.status_code}) : {insert_res.status_text}"
         return True, ""
     except Exception as e:
         return False, str(e)
@@ -169,6 +173,9 @@ def save_preferences(nom, prefs):
 def get_mode_questionnaire(nom):
     try:
         res = supabase.table("frequence").select("*").filter("nom", "eq", nom).execute()
+        if res.status_code != 200:
+            st.error(f"Erreur lecture mode_questionnaire : ({res.status_code}) {res.status_text}")
+            return "Tous les jours"
         data = res.data
         if not data:
             return "Tous les jours"
@@ -181,16 +188,17 @@ def get_mode_questionnaire(nom):
 def save_preferences_2(nom, mode_questionnaire):
     try:
         res = supabase.table("frequence").select("nom").filter("nom", "eq", nom).execute()
-        if res.error:
-            return False, res.error.message
+        if res.status_code != 200:
+            return False, f"Erreur API ({res.status_code}) : {res.status_text}"
+
         if res.data:
             update_res = supabase.table("frequence").update({"mode_questionnaire": mode_questionnaire}).filter("nom", "eq", nom).execute()
-            if update_res.error:
-                return False, update_res.error.message
+            if update_res.status_code != 200:
+                return False, f"Erreur API ({update_res.status_code}) : {update_res.status_text}"
         else:
             insert_res = supabase.table("frequence").insert({"nom": nom, "mode_questionnaire": mode_questionnaire}).execute()
-            if insert_res.error:
-                return False, insert_res.error.message
+            if insert_res.status_code != 201:
+                return False, f"Erreur API ({insert_res.status_code}) : {insert_res.status_text}"
         return True, ""
     except Exception as e:
         return False, str(e)
