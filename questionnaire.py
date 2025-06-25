@@ -43,7 +43,7 @@ def load_responses(nom=None, club=None, date=None):
     try:
         query = supabase.table("questionnaire").select("*")
         if nom:
-            query = query.filter("Nom", "eq", nom)
+            query = query.filter("nom", "eq", nom)
         if club:
             query = query.filter("Club", "eq", club)
         if date:
