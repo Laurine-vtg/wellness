@@ -46,21 +46,21 @@ def save_response(data):
     except Exception as e:
         return False, str(e)
 
-
 def load_responses(nom=None, club=None, date=None):
     try:
-        query = supabase.table("questionnaire")
+        query = supabase.table("questionnaire").select("*")
         if nom:
-            query = query.eq("Nom", nom)
+            query = query.filter("Nom", "eq", nom)
         if club:
-            query = query.eq("Club", club)
+            query = query.filter("Club", "eq", club)
         if date:
-            query = query.eq("Date", date)
-        res = query.select("*").execute()
-        if res.error:
-            st.error(f"Erreur lors du chargement des réponses : {res.error.message}")
+            query = query.filter("Date", "eq", date)
+
+        res = query.execute()
+        data = res.data
+        if data is None:
             return pd.DataFrame()
-        return pd.DataFrame(res.data)
+        return pd.DataFrame(data)
     except Exception as e:
         st.error(f"Erreur lors du chargement des réponses : {e}")
         return pd.DataFrame()
