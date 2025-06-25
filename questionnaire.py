@@ -1,4 +1,3 @@
-# Importer les outils utilisés
 import streamlit as st
 from PIL import Image
 from datetime import datetime, timedelta
@@ -11,25 +10,18 @@ import streamlit.components.v1 as components
 import numpy as np
 import json
 
-
-import streamlit as st
-import os
-import json
 from supabase import create_client, Client
-import os
 
+# Connexion Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
-# Fonction pour enregistrer réponse au questionnaire
-
+# Enregistrement des réponses
 def save_response(data):
     try:
         res = supabase.table("questionnaire").insert([{
-            "nom": data["nom"],
+            "Nom": data["Nom"],
             "Club": data["Club"],
             "Date": data["Date"],
             "Intensité": data["Intensité"],
@@ -40,38 +32,36 @@ def save_response(data):
             "Douleurs": data["Douleurs"],
             "Description_des_douleurs": data["Description des douleurs"],
         }]).execute()
-        if res.get("error") is not None:
-            return False, res.get("error")["message"]
+        if res.error:
+            return False, res.error.message
         return True, ""
     except Exception as e:
         return False, str(e)
 
+# Chargement des réponses
 def load_responses(nom=None, club=None, date=None):
     try:
         query = supabase.table("questionnaire").select("*")
         if nom:
-            query = query.filter("nom", "eq", nom)
+            query = query.filter("Nom", "eq", nom)
         if club:
             query = query.filter("Club", "eq", club)
         if date:
             query = query.filter("Date", "eq", date)
 
         res = query.execute()
-        data = res.get("data")
-        if data is None:
+        if res.error:
+            st.error(res.error.message)
             return pd.DataFrame()
-        return pd.DataFrame(data)
+        return pd.DataFrame(res.data)
     except Exception as e:
         st.error(f"Erreur lors du chargement des réponses : {e}")
         return pd.DataFrame()
 
-
-
-# Fonction pour charger les utilisateurs depuis CSV
-
+# Chargement des utilisateurs
 def load_users_from_csv(path="ID.csv"):
     df = pd.read_csv(path, sep=";")
-    users_dict = {
+    return {
         row["username"]: {
             "password": row["password"],
             "role": row["role"],
@@ -79,38 +69,35 @@ def load_users_from_csv(path="ID.csv"):
         }
         for _, row in df.iterrows()
     }
-    return users_dict
 
 USERS = load_users_from_csv()
+
+# Suppression de réponse
 def supprimer_reponse(nom, date):
     try:
         res = supabase.table("questionnaire").select("id")\
-            .filter("Nom", "eq", nom)\
+            .filter("nom", "eq", nom)\
             .filter("Date", "eq", date)\
             .execute()
-        if res.get("error") is not None or not res.get("data"):
+        if res.error or not res.data:
             return False, "Réponse non trouvée"
-
-        id_to_delete = res.get("data")[0]["id"]
-        delete_res = supabase.table("questionnaire").delete().eq("id", id_to_delete).execute()  # À corriger aussi ici
-        # corriger delete_res
+        id_to_delete = res.data[0]["id"]
         delete_res = supabase.table("questionnaire").delete().filter("id", "eq", id_to_delete).execute()
-        if delete_res.get("error"):
-            return False, delete_res.get("error")["message"]
+        if delete_res.error:
+            return False, delete_res.error.message
         return True, ""
     except Exception as e:
         return False, str(e)
 
-
-# Fonction utilitaire
+# Conversion numéro colonne → lettre
 def col_num_to_letter(n):
-    """Convertit un numéro de colonne en lettre Excel (ex: 1 -> A, 27 -> AA)"""
     string = ""
     while n > 0:
         n, remainder = divmod(n - 1, 26)
         string = chr(65 + remainder) + string
     return string
 
+# Préférences par défaut
 default_prefs = {
     "show_seance": True,
     "show_weekly_intensity": True,
@@ -150,66 +137,62 @@ default_prefs = {
     "show_seance_team_coach": True,
 }
 
+# Chargement des préférences
 def get_preferences(nom):
     res = supabase.table("preferences").select("*").filter("nom", "eq", nom).execute()
-    if res.get("error") is not None:
-        st.error(f"Erreur : {res.get('error')['message']}")
+    if res.error:
+        st.error(f"Erreur chargement préférences : {res.error.message}")
         return {}
-    if not res.get("data"):
-        # Valeurs par défaut ici (à adapter)
-        user_info = USERS.get(nom)
-        role = user_info.get("role") if user_info else "player"
-        # Construire default_prefs comme avant
+    if not res.data:
         return default_prefs
-    return res.get("data")[0]
+    return res.data[0]
 
-
-
+# Sauvegarde des préférences
 def save_preferences(nom, prefs):
     try:
         res = supabase.table("preferences").select("nom").filter("nom", "eq", nom).execute()
         data = {k: 1 if v else 0 for k, v in prefs.items()}
         data["nom"] = nom
-        if res.get("data"):
+        if res.data:
             update_res = supabase.table("preferences").update(data).filter("nom", "eq", nom).execute()
-            if update_res.get("error"):
-                return False, update_res.get("error")["message"]
+            if update_res.error:
+                return False, update_res.error.message
         else:
             insert_res = supabase.table("preferences").insert(data).execute()
-            if insert_res.get("error"):
-                return False, insert_res.get("error")["message"]
+            if insert_res.error:
+                return False, insert_res.error.message
         return True, ""
     except Exception as e:
         return False, str(e)
 
-
-
+# Lecture de la fréquence du questionnaire
 def get_mode_questionnaire(nom):
     try:
         res = supabase.table("frequence").select("*").filter("nom", "eq", nom).execute()
-        data = res.get("data")
-        if not data:
+        if res.error:
+            st.error(f"Erreur lecture fréquence : {res.error.message}")
             return "Tous les jours"
-        return data[0].get("mode_questionnaire", "Tous les jours")
+        if not res.data:
+            return "Tous les jours"
+        return res.data[0].get("mode_questionnaire", "Tous les jours")
     except Exception as e:
         st.error(f"Erreur lecture mode_questionnaire : {e}")
         return "Tous les jours"
 
-
-
+# Sauvegarde de la fréquence
 def save_preferences_2(nom, mode_questionnaire):
     try:
         res = supabase.table("frequence").select("nom").filter("nom", "eq", nom).execute()
-        if res.get("error") is not None:
+        if res.error:
             return False, res.error.message
-        if res.get("data"):
+        if res.data:
             update_res = supabase.table("frequence").update({"mode_questionnaire": mode_questionnaire}).filter("nom", "eq", nom).execute()
-            if update_res.get("error"):
-                return False, update_res.get("error")["message"]
+            if update_res.error:
+                return False, update_res.error.message
         else:
             insert_res = supabase.table("frequence").insert({"nom": nom, "mode_questionnaire": mode_questionnaire}).execute()
-            if insert_res.get("error"):
-                return False, insert_res.get("error")["message"]
+            if insert_res.error:
+                return False, insert_res.error.message
         return True, ""
     except Exception as e:
         return False, str(e)
