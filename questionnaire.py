@@ -40,8 +40,8 @@ def save_response(data):
             "Douleurs": data["Douleurs"],
             "Description_des_douleurs": data["Description des douleurs"],
         }]).execute()
-        if res.error:
-            return False, res.error.message
+        if res.get("error") is not None:
+            return False, res.get("error")["message"]
         return True, ""
     except Exception as e:
         return False, str(e)
@@ -57,7 +57,7 @@ def load_responses(nom=None, club=None, date=None):
             query = query.filter("Date", "eq", date)
 
         res = query.execute()
-        data = res.data
+        data = res.get("data")
         if data is None:
             return pd.DataFrame()
         return pd.DataFrame(data)
@@ -88,15 +88,15 @@ def supprimer_reponse(nom, date):
             .filter("Nom", "eq", nom)\
             .filter("Date", "eq", date)\
             .execute()
-        if res.error or not res.data:
+        if res.get("error") is not None or not res.get("data"):
             return False, "Réponse non trouvée"
 
-        id_to_delete = res.data[0]["id"]
+        id_to_delete = res.get("data")[0]["id"]
         delete_res = supabase.table("questionnaire").delete().eq("id", id_to_delete).execute()  # À corriger aussi ici
         # corriger delete_res
         delete_res = supabase.table("questionnaire").delete().filter("id", "eq", id_to_delete).execute()
-        if delete_res.error:
-            return False, delete_res.error.message
+        if delete_res.get("error"):
+            return False, delete_res.get("error")["message"]
         return True, ""
     except Exception as e:
         return False, str(e)
@@ -152,16 +152,16 @@ default_prefs = {
 
 def get_preferences(nom):
     res = supabase.table("preferences").select("*").filter("nom", "eq", nom).execute()
-    if res.error:
-        st.error(f"Erreur lors du chargement des préférences : {res.error.message}")
+    if res.get("error") is not None:
+        st.error(f"Erreur : {res.get('error')['message']}")
         return {}
-    if not res.data:
+    if not res.get("data"):
         # Valeurs par défaut ici (à adapter)
         user_info = USERS.get(nom)
         role = user_info.get("role") if user_info else "player"
         # Construire default_prefs comme avant
         return default_prefs
-    return res.data[0]
+    return res.get("data")[0]
 
 
 
@@ -170,14 +170,14 @@ def save_preferences(nom, prefs):
         res = supabase.table("preferences").select("nom").filter("nom", "eq", nom).execute()
         data = {k: 1 if v else 0 for k, v in prefs.items()}
         data["nom"] = nom
-        if res.data:
+        if res.get("data"):
             update_res = supabase.table("preferences").update(data).filter("nom", "eq", nom).execute()
-            if update_res.error:
-                return False, update_res.error.message
+            if update_res.get("error"):
+                return False, update_res.get("error")["message"]
         else:
             insert_res = supabase.table("preferences").insert(data).execute()
-            if insert_res.error:
-                return False, insert_res.error.message
+            if insert_res.get("error"):
+                return False, insert_res.get("error")["message"]
         return True, ""
     except Exception as e:
         return False, str(e)
@@ -187,7 +187,7 @@ def save_preferences(nom, prefs):
 def get_mode_questionnaire(nom):
     try:
         res = supabase.table("frequence").select("*").filter("nom", "eq", nom).execute()
-        data = res.data
+        data = res.get("data")
         if not data:
             return "Tous les jours"
         return data[0].get("mode_questionnaire", "Tous les jours")
@@ -200,16 +200,16 @@ def get_mode_questionnaire(nom):
 def save_preferences_2(nom, mode_questionnaire):
     try:
         res = supabase.table("frequence").select("nom").filter("nom", "eq", nom).execute()
-        if res.error:
+        if res.get("error") is not None:
             return False, res.error.message
-        if res.data:
+        if res.get("data"):
             update_res = supabase.table("frequence").update({"mode_questionnaire": mode_questionnaire}).filter("nom", "eq", nom).execute()
-            if update_res.error:
-                return False, update_res.error.message
+            if update_res.get("error"):
+                return False, update_res.get("error")["message"]
         else:
             insert_res = supabase.table("frequence").insert({"nom": nom, "mode_questionnaire": mode_questionnaire}).execute()
-            if insert_res.error:
-                return False, insert_res.error.message
+            if insert_res.get("error"):
+                return False, insert_res.get("error")["message"]
         return True, ""
     except Exception as e:
         return False, str(e)
