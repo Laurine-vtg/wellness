@@ -82,16 +82,19 @@ def load_users_from_csv(path="ID.csv"):
     return users_dict
 
 USERS = load_users_from_csv()
-
 def supprimer_reponse(nom, date):
     try:
-        # Recherche de la ligne à supprimer
-        res = supabase.table("questionnaire").select("id").eq("Nom", nom).eq("Date", date).execute()
+        res = supabase.table("questionnaire").select("id")\
+            .filter("Nom", "eq", nom)\
+            .filter("Date", "eq", date)\
+            .execute()
         if res.error or not res.data:
             return False, "Réponse non trouvée"
 
         id_to_delete = res.data[0]["id"]
-        delete_res = supabase.table("questionnaire").delete().eq("id", id_to_delete).execute()
+        delete_res = supabase.table("questionnaire").delete().eq("id", id_to_delete).execute()  # À corriger aussi ici
+        # corriger delete_res
+        delete_res = supabase.table("questionnaire").delete().filter("id", "eq", id_to_delete).execute()
         if delete_res.error:
             return False, delete_res.error.message
         return True, ""
@@ -148,7 +151,7 @@ default_prefs = {
 }
 
 def get_preferences(nom):
-    res = supabase.table("preferences").select("*").eq("nom", nom).execute()
+    res = supabase.table("preferences").select("*").filter("nom", "eq", nom).execute()
     if res.error:
         st.error(f"Erreur lors du chargement des préférences : {res.error.message}")
         return {}
@@ -164,11 +167,11 @@ def get_preferences(nom):
 
 def save_preferences(nom, prefs):
     try:
-        res = supabase.table("preferences").select("nom").eq("nom", nom).execute()
+        res = supabase.table("preferences").select("nom").filter("nom", "eq", nom).execute()
         data = {k: 1 if v else 0 for k, v in prefs.items()}
         data["nom"] = nom
         if res.data:
-            update_res = supabase.table("preferences").update(data).eq("nom", nom).execute()
+            update_res = supabase.table("preferences").update(data).filter("nom", "eq", nom).execute()
             if update_res.error:
                 return False, update_res.error.message
         else:
@@ -183,7 +186,7 @@ def save_preferences(nom, prefs):
 
 def get_mode_questionnaire(nom):
     try:
-        res = supabase.table("frequence").select("*").eq("nom", nom).execute()
+        res = supabase.table("frequence").select("*").filter("nom", "eq", nom).execute()
         data = res.data
         if not data:
             return "Tous les jours"
@@ -196,11 +199,11 @@ def get_mode_questionnaire(nom):
 
 def save_preferences_2(nom, mode_questionnaire):
     try:
-        res = supabase.table("frequence").select("nom").eq("nom", nom).execute()
+        res = supabase.table("frequence").select("nom").filter("nom", "eq", nom).execute()
         if res.error:
             return False, res.error.message
         if res.data:
-            update_res = supabase.table("frequence").update({"mode_questionnaire": mode_questionnaire}).eq("nom", nom).execute()
+            update_res = supabase.table("frequence").update({"mode_questionnaire": mode_questionnaire}).filter("nom", "eq", nom).execute()
             if update_res.error:
                 return False, update_res.error.message
         else:
