@@ -177,12 +177,13 @@ def get_mode_questionnaire(nom):
             st.error(f"Erreur lecture mode_questionnaire : ({res.status_code}) {res.status_text}")
             return "Tous les jours"
         data = res.data
-        if not data:
+        if not data:  # Aucun mode défini pour ce nom
             return "Tous les jours"
         return data[0].get("mode_questionnaire", "Tous les jours")
     except Exception as e:
         st.error(f"Erreur lecture mode_questionnaire : {str(e)}")
         return "Tous les jours"
+
 
 # Sauvegarde de la fréquence
 def save_preferences_2(nom, mode_questionnaire):
