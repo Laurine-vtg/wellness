@@ -29,7 +29,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 def save_response(data):
     try:
         res = supabase.table("questionnaire").insert([{
-            "Nom": data["Nom"],
+            "nom": data["nom"],
             "Club": data["Club"],
             "Date": data["Date"],
             "Intensité": data["Intensité"],
@@ -50,7 +50,7 @@ def load_responses(nom=None, club=None, date=None):
     try:
         query = supabase.table("questionnaire").select("*")
         if nom:
-            query = query.filter("Nom", "eq", nom)
+            query = query.filter("nom", "eq", nom)
         if club:
             query = query.filter("Club", "eq", club)
         if date:
